@@ -1,0 +1,46 @@
+name: Release
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+    - v*
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup mise
+      uses: jdx/mise-action@v2
+
+    - name: Install Dependencies
+      run: make prod
+
+    - name: Build Gem
+      run: make gem
+
+    - name: Check Version
+      run: |
+        v=$(gem spec *.gem | yq ".version.version" | tr -d "\n")
+        if [[ "v$v" != "${{github.ref_name}}" ]]; then
+          echo "Version mismatch: "v$v" != ${{github.ref_name}}"
+          exit 1
+        fi
+
+    - name: Publish Gem
+      env:
+        GEM_HOST_API_KEY: ${{secrets.RUBYGEMS_API_KEY}}
+      run: gem push *.gem
+
+    - name: Create Release
+      env:
+        GH_TOKEN: ${{github.token}}
+      run: |
+        gh release create \
+          --title "${{github.ref_name}}" \
+          --notes "See https://github.com/onlyoffice/docs-integration-sdk-ruby/blob/master/CHANGELOG.md/"

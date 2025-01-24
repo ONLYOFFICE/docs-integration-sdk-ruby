@@ -1,0 +1,45 @@
+name: Publish
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+    - Release
+    types:
+    - completed
+
+jobs:
+  publish:
+    if: ${{github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'}}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Persist Dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          bin
+          sorbet
+        key: deps
+
+    - name: Setup GitHub Actions Bot
+      uses: vanyauhalin/action-gh-bot@v0
+
+    - name: Setup mise
+      uses: jdx/mise-action@v2
+
+    - name: Install Dependencies
+      run: make dev
+
+    - name: Build Documentation
+      run: make doc
+
+    - name: Publish Documentation
+      uses: vanyauhalin/action-gh-pages@v0
+      with:
+        working-directory: doc

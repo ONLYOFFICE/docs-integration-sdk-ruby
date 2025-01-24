@@ -1,0 +1,61 @@
+name: Audit
+
+on:
+  pull_request:
+    branches:
+    - master
+    - develop
+  push:
+    branches:
+    - master
+    - develop
+  workflow_dispatch:
+
+jobs:
+  audit:
+    strategy:
+      matrix:
+        os:
+        - ubuntu-latest
+        # - windows-latest
+        ruby:
+        - 2
+        - 3
+
+    runs-on: ${{matrix.os}}
+
+    steps:
+    # # https://github.com/actions/checkout/issues/135/
+    # - name: Set LF Line Endings
+    #   run: |
+    #     git config --global core.autocrlf false
+    #     git config --global core.eol lf
+
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Persist Dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          bin
+          sorbet
+        key: os-${{matrix.os}}_ruby-${{matrix.ruby}}_deps
+
+    - name: Prepare mise
+      run: sed --in-place 's/\(^ruby = \)".*"/\1"prefix:${{matrix.ruby}}"/' mise.toml
+
+    - name: Setup mise
+      uses: jdx/mise-action@v2
+
+    - name: Install Dependencies
+      run: make dev
+
+    # - name: Run Linting
+    #   run: make lint
+
+    - name: Run Testing
+      run: make test
+
+    - name: Run Type Checking
+      run: make type
