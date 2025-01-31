@@ -4,14 +4,12 @@ This document records all notable changes to the project, following the [Keep a 
 
 ## [Unreleased]
 
-There are no noticeable changes in version [unreleased].
-
-## [0.1.0] - 2025-01-31
+<!-- There are no noticeable changes in version [unreleased]. -->
 
 ### Added
 
-- The `Jwt` to encode and decode URL, header, and body ([xxxxxxx]).
-- The `Client` to interact with the command, conversion, and healthcheck services ([xxxxxxx]).
+- The `Jwt` to encode and decode URL, header, and body ([fb44e19]).
+- The `Client` to interact with the command, conversion, and healthcheck services ([fb44e19]).
 
 <!-- Footnotes -->
 
@@ -19,8 +17,7 @@ There are no noticeable changes in version [unreleased].
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Releases, newest on top -->
-[Unreleased]: https://github.com/onlyoffice/docs-integration-sdk-ruby/compare/v0.1.0...HEAD/
-[0.1.0]: https://github.com/onlyoffice/docs-integration-sdk-ruby/releases/tag/v0.1.0/
+[Unreleased]: https://github.com/onlyoffice/docs-integration-sdk-ruby/compare/HEAD/
 
 <!-- Commits, newest on top -->
-[xxxxxxx]: https://github.com/onlyoffice/docs-integration-sdk-ruby/commit/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/
+[fb44e19]: https://github.com/onlyoffice/docs-integration-sdk-ruby/commit/fb44e193addda4bad4bd09841eedfc3ad7ef6616/
