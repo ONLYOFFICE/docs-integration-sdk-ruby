@@ -188,7 +188,7 @@ module Onlyoffice
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h)
-            f = headers(c)
+            f = headers(c, m)
 
             r = c.request(n, u)
             assert_equal(m, r.method)
@@ -203,7 +203,7 @@ module Onlyoffice
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h, user_agent: "my-agent")
-            f = headers(c)
+            f = headers(c, m)
 
             r = c.request(n, u)
             assert_equal(m, r.method)
@@ -218,7 +218,7 @@ module Onlyoffice
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h)
-            f = headers_with_content_type(c)
+            f = headers_with_content_type(c, m)
 
             r = c.request(n, u, {"value" => "hi"})
             assert_equal(m, r.method)
@@ -233,7 +233,7 @@ module Onlyoffice
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h)
-            f = headers(c)
+            f = headers(c, m)
 
             WebMock.stub_request(m.downcase.to_sym, u).
               with(headers: f).
@@ -259,7 +259,7 @@ module Onlyoffice
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h, user_agent: "my-agent")
-            f = headers(c)
+            f = headers(c, m)
 
             WebMock.stub_request(m.downcase.to_sym, u).
               with(headers: f).
@@ -285,7 +285,7 @@ module Onlyoffice
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h)
-            f = headers_with_content_type(c)
+            f = headers_with_content_type(c, m)
 
             WebMock.stub_request(m.downcase.to_sym, u).
               with(headers: f).
@@ -311,7 +311,7 @@ module Onlyoffice
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h)
-            f = headers(c)
+            f = headers(c, m)
 
             WebMock.stub_request(m.downcase.to_sym, u).
               with(headers: f).
@@ -342,7 +342,7 @@ module Onlyoffice
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h).with_jwt(j)
-            f0 = headers_with_content_type(c)
+            f0 = headers_with_content_type(c, m)
 
             WebMock.stub_request(m.downcase.to_sym, u).
               with(headers: f0).
@@ -384,7 +384,7 @@ module Onlyoffice
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h).with_jwt(j)
-            f = headers_with_content_type(c)
+            f = headers_with_content_type(c, m)
 
             WebMock.stub_request(m.downcase.to_sym, u).
               with(headers: f).
@@ -422,7 +422,7 @@ module Onlyoffice
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h).with_jwt(j)
-            f0 = headers_with_content_type(c)
+            f0 = headers_with_content_type(c, m)
 
             WebMock.stub_request(m.downcase.to_sym, u).
               with(headers: f0).
@@ -471,7 +471,7 @@ module Onlyoffice
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h).with_jwt(j)
-            f0 = headers_with_content_type(c)
+            f0 = headers_with_content_type(c, m)
 
             WebMock.stub_request(m.downcase.to_sym, u).
               with(headers: f0).
@@ -517,7 +517,7 @@ module Onlyoffice
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h).with_jwt(j)
-            f0 = headers_with_content_type(c)
+            f0 = headers_with_content_type(c, m)
 
             WebMock.stub_request(m.downcase.to_sym, u).
               with(headers: f0).
@@ -602,35 +602,47 @@ module Onlyoffice
           self.class.client_with_a_jwt
         end
 
-        sig {params(c: Client).returns(T::Hash[String, T::Array[String]])}
-        def self.headers(c)
-          {
+        sig {params(c: Client, m: String).returns(T::Hash[String, T::Array[String]])}
+        def self.headers(c, m)
+          o = {
             "accept" => ["application/json"],
             "accept-encoding" => ["gzip;q=1.0,deflate;q=0.6,identity;q=0.3"],
             "host" => ["#{c.base_uri.host}:#{c.base_uri.port}"],
             "user-agent" => [c.user_agent],
           }
+
+          if RUBY_VERSION < "3.0.0" && m == "HEAD"
+            o.delete("accept-encoding")
+          end
+
+          o
         end
 
-        sig {params(c: Client).returns(T::Hash[String, T::Array[String]])}
-        def headers(c)
-          self.class.headers(c)
+        sig {params(c: Client, m: String).returns(T::Hash[String, T::Array[String]])}
+        def headers(c, m)
+          self.class.headers(c, m)
         end
 
-        sig {params(c: Client).returns(T::Hash[String, T::Array[String]])}
-        def self.headers_with_content_type(c)
-          {
+        sig {params(c: Client, m: String).returns(T::Hash[String, T::Array[String]])}
+        def self.headers_with_content_type(c, m)
+          o = {
             "accept" => ["application/json"],
             "accept-encoding" => ["gzip;q=1.0,deflate;q=0.6,identity;q=0.3"],
             "content-type" => ["application/json"],
             "host" => ["#{c.base_uri.host}:#{c.base_uri.port}"],
             "user-agent" => [c.user_agent],
           }
+
+          if RUBY_VERSION < "3.0.0" && m == "HEAD"
+            o.delete("accept-encoding")
+          end
+
+          o
         end
 
-        sig {params(c: Client).returns(T::Hash[String, T::Array[String]])}
-        def headers_with_content_type(c)
-          self.class.headers_with_content_type(c)
+        sig {params(c: Client, m: String).returns(T::Hash[String, T::Array[String]])}
+        def headers_with_content_type(c, m)
+          self.class.headers_with_content_type(c, m)
         end
 
         sig {returns(T::Array[[String, T.class_of(Net::HTTPRequest)]])}

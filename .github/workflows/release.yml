@@ -19,6 +19,8 @@ jobs:
       uses: jdx/mise-action@v2
 
     - name: Install Dependencies
+      env:
+        TAPIOCA_WORKERS: 1
       run: make prod
 
     - name: Build Gem

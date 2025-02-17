@@ -598,7 +598,7 @@ module Onlyoffice
           def test_do_does
             c = ClientTest.client
             m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c)
+            h = ClientTest.headers_with_content_type(c, m)
 
             WebMock.stub_request(m.downcase.to_sym, e).
               with(headers: h, body: {"async" => true}).
@@ -627,7 +627,7 @@ module Onlyoffice
           def test_do_does_with_a_subpath
             c = ClientTest.client_with_a_subpath
             m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c)
+            h = ClientTest.headers_with_content_type(c, m)
 
             WebMock.stub_request(m.downcase.to_sym, e).
               with(headers: h, body: {"async" => true}).
@@ -656,7 +656,7 @@ module Onlyoffice
           def test_exec_executes_with_a_user_agent
             c = ClientTest.client_with_a_user_agent
             m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c)
+            h = ClientTest.headers_with_content_type(c, m)
 
             WebMock.stub_request(m.downcase.to_sym, e).
               with(headers: h, body: {"async" => true}).
@@ -685,7 +685,7 @@ module Onlyoffice
           def test_exec_executes_with_a_jwt
             c = ClientTest.client_with_a_jwt
             m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c)
+            h = ClientTest.headers_with_content_type(c, m)
 
             WebMock.stub_request(m.downcase.to_sym, e).
               with(headers: h, body: /.+/).
@@ -714,7 +714,7 @@ module Onlyoffice
           def test_do_returns_an_error_if_the_response_body_is_invalid_json
             c = ClientTest.client_with_a_user_agent
             m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c)
+            h = ClientTest.headers_with_content_type(c, m)
 
             WebMock.stub_request(m.downcase.to_sym, e).
               with(headers: h, body: {"async" => true}).
@@ -744,7 +744,7 @@ module Onlyoffice
             for v in ConversionService::Error.values
               c = ClientTest.client_with_a_user_agent
               m, e = endpoint(c)
-              h = ClientTest.headers_with_content_type(c)
+              h = ClientTest.headers_with_content_type(c, m)
 
               WebMock.stub_request(m.downcase.to_sym, e).
                 with(headers: h, body: {"async" => true}).
@@ -772,7 +772,7 @@ module Onlyoffice
           def test_do_returns_an_error_if_the_doing_fails_with_an_unknown_error
             c = ClientTest.client_with_a_user_agent
             m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c)
+            h = ClientTest.headers_with_content_type(c, m)
 
             WebMock.stub_request(m.downcase.to_sym, e).
               with(headers: h, body: {"async" => true}).
@@ -801,7 +801,7 @@ module Onlyoffice
           def test_do_ignores_unknown_keys_in_the_response
             c = ClientTest.client_with_a_user_agent
             m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c)
+            h = ClientTest.headers_with_content_type(c, m)
 
             WebMock.stub_request(m.downcase.to_sym, e).
               with(headers: h, body: {"async" => true}).

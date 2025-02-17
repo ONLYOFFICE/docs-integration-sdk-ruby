@@ -127,7 +127,7 @@ module Onlyoffice
         p = d[0]
         assert_equal(2, p.keys.length)
         assert_equal(1, p["v"])
-        assert_in_delta(Time.now.utc.to_i + 300, p["exp"])
+        assert_in_delta(Time.now.utc.to_i + 300, p["exp"], 0.01)
 
         h = d[1]
         assert_equal(1, h.keys.length)
@@ -187,7 +187,7 @@ module Onlyoffice
         p = d[0]
         assert_equal(2, p.keys.length)
         assert_equal(1, p["v"])
-        assert_in_delta(Time.now.utc.to_i, p["iat"])
+        assert_in_delta(Time.now.utc.to_i, p["iat"], 0.01)
 
         h = d[1]
         assert_equal(1, h.keys.length)
@@ -212,8 +212,8 @@ module Onlyoffice
         p = d[0]
         assert_equal(3, p.keys.length)
         assert_equal(1, p["v"])
-        assert_in_delta(Time.now.utc.to_i + 300, p["exp"])
-        assert_in_delta(Time.now.utc.to_i, p["iat"])
+        assert_in_delta(Time.now.utc.to_i + 300, p["exp"], 0.01)
+        assert_in_delta(Time.now.utc.to_i, p["iat"], 0.01)
 
         h = d[1]
         assert_equal(1, h.keys.length)
@@ -239,7 +239,7 @@ module Onlyoffice
         p = d[0]
         assert_equal(2, p.keys.length)
         assert_equal(1, p["v"])
-        assert_in_delta(Time.now.utc.to_i + 300, p["exp"])
+        assert_in_delta(Time.now.utc.to_i + 300, p["exp"], 0.01)
 
         h = d[1]
         assert_equal(1, h.keys.length)

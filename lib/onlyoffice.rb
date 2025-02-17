@@ -17,7 +17,5 @@
 # typed: strict
 # frozen_string_literal: true
 
-# todo: https://github.com/bblimke/webmock/issues/1088/
-
 require "sorbet-runtime"
 require_relative "onlyoffice/docs_integration_sdk"

@@ -18,11 +18,14 @@ jobs:
         os:
         - ubuntu-latest
         # - windows-latest
-        ruby:
-        - 2
-        - 3
+        mise:
+        - edge
+        - legacy
 
     runs-on: ${{matrix.os}}
+
+    env:
+      MISE_ENV: ${{matrix.mise}}
 
     steps:
     # # https://github.com/actions/checkout/issues/135/
@@ -40,15 +43,20 @@ jobs:
         path: |
           bin
           sorbet
-        key: os-${{matrix.os}}_ruby-${{matrix.ruby}}_deps
-
-    - name: Prepare mise
-      run: sed --in-place 's/\(^ruby = \)".*"/\1"prefix:${{matrix.ruby}}"/' mise.toml
+        key: os-${{matrix.os}}_mise-${{matrix.mise}}_deps
 
     - name: Setup mise
       uses: jdx/mise-action@v2
+      with:
+        # https://github.com/jdx/mise-action/issues/169/
+        cache_key_prefix: mise-${{matrix.mise}}
+
+    - name: Install Bundler
+      run: make bundler
 
     - name: Install Dependencies
+      env:
+        TAPIOCA_WORKERS: 1
       run: make dev
 
     # - name: Run Linting
