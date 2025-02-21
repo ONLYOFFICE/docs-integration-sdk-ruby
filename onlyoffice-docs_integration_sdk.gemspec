@@ -63,7 +63,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency("sorbet", "0.5.11766")
   s.add_development_dependency("tapioca", "0.11.8")
   s.add_development_dependency("test-unit", "3.6.7")
-  s.add_development_dependency("webmock", "3.24.0")
   s.add_development_dependency("webrick", "1.9.1")
   s.add_development_dependency("yard", "0.9.37")
   s.add_development_dependency("yard-sorbet", "0.8.1")

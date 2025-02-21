@@ -14,21 +14,50 @@
 # limitations under the License.
 #
 
-# typed: false
+# typed: strict
 # frozen_string_literal: true
 
 require "rake"
 
-task :test do
+Rake::Task.define_task(:test) do
   require "simplecov"
-  require "test/unit"
-  require "webmock/test_unit"
 
-  SimpleCov.start do
-    add_filter /.*_test\.rb/
-  end
+  SimpleCov.command_name("Unit Tests")
+  SimpleCov.add_filter(/.*_test\.rb/)
+  SimpleCov.enable_coverage(:branch)
+  SimpleCov.minimum_coverage(line: 80, branch: 80)
+  SimpleCov.minimum_coverage_by_file(line: 80, branch: 80)
+  SimpleCov.start
 
   for f in Dir.glob("lib/**/*_test.rb")
     require_relative f
   end
+end
+
+Rake::Task.define_task(:test_fork) do
+  require "simplecov"
+
+  SimpleCov.command_name("Unit Tests")
+  SimpleCov.add_filter(/.*_test\.rb/)
+  SimpleCov.enable_coverage(:branch)
+  SimpleCov.minimum_coverage(line: 80, branch: 80)
+  SimpleCov.minimum_coverage_by_file(line: 80, branch: 80)
+  SimpleCov.start
+
+  c = 0
+
+  for f in Dir.glob("lib/**/*_test.rb")
+    pid = fork do
+      SimpleCov.at_fork.call(Process.pid)
+      require_relative f
+    end
+
+    Process.wait(pid)
+
+    if c == 0 && !$?.success?
+      c = 1
+    end
+  end
+
+  exit(c)
 end

@@ -17,6 +17,8 @@
 # typed: true
 # frozen_string_literal: true
 
+require "test/unit"
+require_relative "../../test_test"
 require_relative "jwt"
 
 module Onlyoffice
@@ -24,32 +26,21 @@ module Onlyoffice
     module DocumentServer
       class Client
         class Jwt
-          class LocationTest < Test::Unit::TestCase
+          class LocationTest < ::Test::Unit::TestCase
             extend T::Sig
+            include Test::BasicEnumMarshalling
 
-            sig {returns(T::Array[[String, Location]])}
+            sig {override.returns(T::Array[[String, Location]])}
             def cases
               [
                 ["header", Location::Header],
                 ["body", Location::Body],
               ]
             end
-
-            def test_serialize_serializes
-              for v, c in cases
-                assert_equal(v, c.serialize)
-              end
-            end
-
-            def test_from_serialized_deserializes
-              for v, c in cases
-                assert_equal(c, Location.from_serialized(v))
-              end
-            end
           end
         end
 
-        class JwtTest < Test::Unit::TestCase
+        class JwtTest < ::Test::Unit::TestCase
           def test_initialize_initializes_with_default_values
             w = DocsIntegrationSdk::Jwt.new(secret: "***")
             j = Jwt.new(jwt: w)

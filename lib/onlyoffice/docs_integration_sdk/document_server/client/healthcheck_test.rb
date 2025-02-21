@@ -17,6 +17,10 @@
 # typed: true
 # frozen_string_literal: true
 
+require "test/unit"
+require_relative "../../jwt"
+require_relative "../../test_test"
+require_relative "../client_test"
 require_relative "healthcheck"
 
 module Onlyoffice
@@ -24,10 +28,11 @@ module Onlyoffice
     module DocumentServer
       class Client
         class HealthcheckService
-          class ErrorTest < Test::Unit::TestCase
+          class ErrorTest < ::Test::Unit::TestCase
             extend T::Sig
+            include Test::DescriptiveEnumMarshalling
 
-            sig {returns(T::Array[[Integer, String, Error]])}
+            sig {override.returns(T::Array[[Integer, String, Error]])}
             def cases
               [
                 [
@@ -37,155 +42,165 @@ module Onlyoffice
                 ]
               ]
             end
-
-            def test_serialize_serializes
-              for v, _, c in cases
-                assert_equal(v, c.serialize)
-              end
-            end
-
-            def test_from_serialized_deserializes
-              for v, _, c in cases
-                assert_equal(c, Error.from_serialized(v))
-              end
-            end
-
-            def test_description_returns_the_description
-              for _, d, c in cases
-                assert_equal(d, c.description)
-              end
-            end
           end
         end
 
-        class HealthcheckServiceTest < Test::Unit::TestCase
+        class HealthcheckServiceTest < ::Test::Unit::TestCase
           extend T::Sig
+          include Test::DocumentServer::Client
 
           def test_do_does
-            c = ClientTest.client
-            m, e = endpoint(c)
-            h = ClientTest.headers(c, m)
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h).
-              to_return(body: "true")
+            m = "GET"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "healthcheck"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers(m, u, req)
+              t.assert_nil(req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok("true")
+            end
+
+            c = Client.new(base_uri: u, http: h)
 
             res = c.healthcheck.do
             assert_nil(res.error)
-
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_nil(res.request.body)
 
             assert_equal("true", res.response.body)
           end
 
-          def test_do_does_with_a_subpath
-            c = ClientTest.client_with_a_subpath
-            m, e = endpoint(c)
-            h = ClientTest.headers(c, m)
+          def test_do_does_with_the_subpath
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h).
-              to_return(body: "true")
+            m = "GET"
+            u = T.cast(URI.parse("http://localhost:8080/sub/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "healthcheck"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers(m, u, req)
+              t.assert_nil(req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok("true")
+            end
+
+            c = Client.new(base_uri: u, http: h)
 
             res = c.healthcheck.do
             assert_nil(res.error)
-
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_nil(res.request.body)
 
             assert_equal("true", res.response.body)
           end
 
-          def test_do_does_with_a_user_agent
-            c = ClientTest.client_with_a_user_agent
-            m, e = endpoint(c)
-            h = ClientTest.headers(c, m)
+          def test_do_does_with_the_user_agent
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h).
-              to_return(body: "true")
+            m = "GET"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "healthcheck"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers_with_custom_user_agent(m, u, "my-agent", req)
+              t.assert_nil(req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok("true")
+            end
+
+            c = Client.new(base_uri: u, http: h, user_agent: "my-agent")
 
             res = c.healthcheck.do
             assert_nil(res.error)
-
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_nil(res.request.body)
 
             assert_equal("true", res.response.body)
           end
 
-          def test_do_does_with_a_jwt
-            c = ClientTest.client_with_a_jwt
-            m, e = endpoint(c)
-            h = ClientTest.headers(c, m)
+          def test_do_does_with_the_jwt
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h).
-              to_return(body: "true")
+            w = DocsIntegrationSdk::Jwt.new(secret: "***")
+            m = "GET"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "healthcheck"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers(m, u, req)
+              t.assert_nil(req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok("true")
+            end
+
+            j = Jwt.new(jwt: w)
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
 
             res = c.healthcheck.do
             assert_nil(res.error)
-
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            # assert_equal(h, res.request.to_hash)
-            assert_nil(res.request.body)
 
             assert_equal("true", res.response.body)
           end
 
           def test_do_returns_an_error_if_the_response_body_is_invalid_json
-            c = ClientTest.client
-            m, e = endpoint(c)
-            h = ClientTest.headers(c, m)
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h).
-              to_return(body: "}")
+            m = "GET"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "healthcheck"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers(m, u, req)
+              t.assert_nil(req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok("}")
+            end
+
+            c = Client.new(base_uri: u, http: h)
 
             res = c.healthcheck.do
 
             err = T.cast(res.error, JSON::ParserError)
             assert_equal("unexpected token at '}'", err.message)
 
-            assert_equal("GET", res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_nil(res.request.body)
-
             assert_equal("}", res.response.body)
           end
 
           def test_do_returns_an_error_if_the_doing_fails
-            c = ClientTest.client
-            m, e = endpoint(c)
-            h = ClientTest.headers(c, m)
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h).
-              to_return(body: "false")
+            m = "GET"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "healthcheck"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers(m, u, req)
+              t.assert_nil(req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok("false")
+            end
+
+            c = Client.new(base_uri: u, http: h)
 
             res = c.healthcheck.do
             assert_equal(HealthcheckService::Error::Failed, res.error)
 
-            assert_equal("GET", res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_nil(res.request.body)
-
             assert_equal("false", res.response.body)
-          end
-
-          sig {params(c: Client).returns([String, URI::HTTP])}
-          def endpoint(c)
-            ["GET", T.cast(URI.join(c.base_uri, "healthcheck"), URI::HTTP)]
           end
         end
       end

@@ -27,8 +27,6 @@ module Onlyoffice
         # Jwt is a class that represents the JWT token configuration for the
         # Document Server client.
         #
-        # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/signature/)
-        #
         # @since 0.1.0
         class Jwt
           extend T::Sig
@@ -36,21 +34,15 @@ module Onlyoffice
           # Location is an enum that represents the location of the JWT token in
           # the request.
           #
-          # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/signature/request/)
-          #
           # @since 0.1.0
           class Location < T::Enum
             enums do
               # Header is the location of the JWT token in the request header.
               #
-              # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/signature/request/token-in-header/)
-              #
               # @since 0.1.0
               Header = new("header")
 
               # Body is the location of the JWT token in the request body.
-              #
-              # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/signature/request/token-in-body/)
               #
               # @since 0.1.0
               Body = new("body")

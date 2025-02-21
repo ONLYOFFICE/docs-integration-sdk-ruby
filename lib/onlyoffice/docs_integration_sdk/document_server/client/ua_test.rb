@@ -17,13 +17,14 @@
 # typed: true
 # frozen_string_literal: true
 
+require "test/unit"
 require_relative "ua"
 
 module Onlyoffice
   module DocsIntegrationSdk
     module DocumentServer
       class Client
-        class UserAgentTest < Test::Unit::TestCase
+        class UserAgentTest < ::Test::Unit::TestCase
           def test
             assert_equal("com.onlyoffice.docs-integration-sdk-ruby #{VERSION}", USER_AGENT)
           end

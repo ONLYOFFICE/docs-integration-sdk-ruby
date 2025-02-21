@@ -14,20 +14,16 @@
 # limitations under the License.
 #
 
-# typed: true
+# typed: strict
 # frozen_string_literal: true
 
-require "test/unit"
-require_relative "version"
+require "sorbet-runtime"
 
 module Onlyoffice
   module DocsIntegrationSdk
-    class VersionTest < ::Test::Unit::TestCase
-      extend T::Sig
-
-      def test
-        assert_equal(VERSION, "0.1.0")
-      end
-    end
+    # @since 0.1.0
+    module DocumentEditor; end
   end
 end
+
+require_relative "document_editor/config"

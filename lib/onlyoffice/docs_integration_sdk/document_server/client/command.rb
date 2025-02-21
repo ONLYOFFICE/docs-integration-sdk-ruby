@@ -43,16 +43,12 @@ module Onlyoffice
 
         # CommandService is an implementation of the {CommandServing} interface.
         #
-        # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/command-service/)
-        #
         # @since 0.1.0
         class CommandService < Service
           include CommandServing
 
           # Error is an enum that represents the possible errors that can occur
           # when using the command service.
-          #
-          # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/command-service/#possible-error-codes-and-their-description)
           #
           # @since 0.1.0
           class Error < T::Enum
@@ -101,6 +97,10 @@ module Onlyoffice
                 "Command not correct"
               when InvalidToken
                 "Invalid token"
+              else
+                # :nocov:
+                # unreachable
+                # :nocov:
               end
             end
           end
@@ -110,85 +110,202 @@ module Onlyoffice
           #
           # @since 0.1.0
           class Request < T::Struct
-            # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/command-service/#command-types)
-            #
+            extend T::Sig
+
             # @since 0.1.0
             class C < T::Enum
               enums do
-                # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/command-service/deleteforgotten/)
-                #
                 # @since 0.1.0
                 DeleteForgotten = new("deleteForgotten")
 
-                # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/command-service/drop/)
-                #
                 # @since 0.1.0
                 Drop = new("drop")
 
-                # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/command-service/forcesave/)
-                #
                 # @since 0.1.0
                 Forcesave = new("forcesave")
 
-                # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/command-service/getforgotten/)
-                #
                 # @since 0.1.0
                 GetForgotten = new("getForgotten")
 
-                # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/command-service/getforgottenlist/)
-                #
                 # @since 0.1.0
                 GetForgottenList = new("getForgottenList")
 
-                # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/command-service/info/)
-                #
                 # @since 0.1.0
                 Info = new("info")
 
-                # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/command-service/license/)
-                #
                 # @since 0.1.0
                 License = new("license")
 
-                # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/command-service/meta/)
-                #
                 # @since 0.1.0
                 Meta = new("meta")
 
-                # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/command-service/version/)
-                #
                 # @since 0.1.0
                 Version = new("version")
               end
             end
 
-            # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/command-service/license/)
-            #
             # @since 0.1.0
             class License < T::Struct
-              # todo
+              extend T::Sig
+
+              # @since 0.1.0
+              prop :end_date, T.nilable(String), name: "end_date"
+
+              # @since 0.1.0
+              prop :trial, T.nilable(T::Boolean), name: "trial"
+
+              # @since 0.1.0
+              prop :customization, T.nilable(T::Boolean), name: "customization"
+
+              # @since 0.1.0
+              prop :connections, T.nilable(Integer), name: "connections"
+
+              # @since 0.1.0
+              prop :connections_view, T.nilable(Integer), name: "connections_view"
+
+              # @since 0.1.0
+              prop :users_count, T.nilable(Integer), name: "users_count"
+
+              # @since 0.1.0
+              prop :users_view_count, T.nilable(Integer), name: "users_view_count"
+
+              # @since 0.1.0
+              prop :users_expire, T.nilable(Integer), name: "users_expire"
+
+              # @since 0.1.0
+              sig {params(hash: T.untyped, strict: T.untyped).returns(License)}
+              def self.from_hash(hash, strict = nil)
+                super(hash, strict)
+              end
             end
 
-            # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/command-service/license/)
-            #
             # @since 0.1.0
             class Server < T::Struct
-              # todo
+              extend T::Sig
+
+              # @since 0.1.0
+              class ResultType < T::Enum
+                extend T::Sig
+
+                enums do
+                  # @since 0.1.0
+                  Error = new(1)
+
+                  # @since 0.1.0
+                  LicenseExpired = new(2)
+
+                  # @since 0.1.0
+                  LicenseAvailable = new(3)
+
+                  # @since 0.1.0
+                  TrialLicenseExpired = new(6)
+                end
+
+                # description returns the human-readable description of the
+                # result type.
+                #
+                # @since 0.1.0
+                sig {returns(String)}
+                def description
+                  case self
+                  when Error
+                    "An error occurred"
+                  when LicenseExpired
+                    "The license expired"
+                  when LicenseAvailable
+                    "The license is still available"
+                  when TrialLicenseExpired
+                    "The trial license expired"
+                  else
+                    # :nocov:
+                    # unreachable
+                    # :nocov:
+                  end
+                end
+              end
+
+              # @since 0.1.0
+              class PackageType < T::Enum
+                enums do
+                  # @since 0.1.0
+                  OpenSource = new(0)
+
+                  # @since 0.1.0
+                  Enterprise = new(1)
+
+                  # @since 0.1.0
+                  Developer = new(2)
+                end
+              end
+
+              # @since 0.1.0
+              prop :result_type, T.nilable(ResultType), name: "resultType"
+
+              # @since 0.1.0
+              prop :package_type, T.nilable(PackageType), name: "packageType"
+
+              # @since 0.1.0
+              prop :build_date, T.nilable(String), name: "buildDate"
+
+              # @since 0.1.0
+              prop :build_version, T.nilable(String), name: "buildVersion"
+
+              # @since 0.1.0
+              prop :build_number, T.nilable(Integer), name: "buildNumber"
+
+              # @since 0.1.0
+              sig {params(hash: T.untyped, strict: T.untyped).returns(Server)}
+              def self.from_hash(hash, strict = nil)
+                super(hash, strict)
+              end
             end
 
-            # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/command-service/license/)
-            #
             # @since 0.1.0
             class Quota < T::Struct
-              # todo
+              extend T::Sig
+
+              # @since 0.1.0
+              class User < T::Struct
+                extend T::Sig
+
+                # @since 0.1.0
+                prop :userid, T.nilable(String), name: "userid"
+
+                # @since 0.1.0
+                prop :expire, T.nilable(String), name: "expire"
+
+                # @since 0.1.0
+                sig {params(hash: T.untyped, strict: T.untyped).returns(User)}
+                def self.from_hash(hash, strict = nil)
+                  super(hash, strict)
+                end
+              end
+
+              # @since 0.1.0
+              prop :users, T.nilable(T::Array[User]), name: "users"
+
+              # @since 0.1.0
+              prop :users_view, T.nilable(T::Array[User]), name: "users_view"
+
+              # @since 0.1.0
+              sig {params(hash: T.untyped, strict: T.untyped).returns(Quota)}
+              def self.from_hash(hash, strict = nil)
+                super(hash, strict)
+              end
             end
 
-            # [ONLYOFFICE Reference](https://api.onlyoffice.com/docs/docs-api/additional-api/command-service/meta/)
-            #
             # @since 0.1.0
             class Meta < T::Struct
+              extend T::Sig
+
               # @since 0.1.0
               prop :title, T.nilable(String), name: "title"
+
+              # @since 0.1.0
+              sig {params(hash: T.untyped, strict: T.untyped).returns(Meta)}
+              def self.from_hash(hash, strict = nil)
+                super(hash, strict)
+              end
             end
 
             # @since 0.1.0
@@ -214,6 +331,12 @@ module Onlyoffice
 
             # @since 0.1.0
             prop :meta, T.nilable(Meta), name: "meta"
+
+            # @since 0.1.0
+            sig {params(hash: T.untyped, strict: T.untyped).returns(Request)}
+            def self.from_hash(hash, strict = nil)
+              super(hash, strict)
+            end
           end
 
           # Result is a class that represents the result of the command service
@@ -222,12 +345,6 @@ module Onlyoffice
           # @since 0.1.0
           class Result < T::Struct
             extend T::Sig
-
-            # @since 0.1.0
-            sig {params(hash: T.untyped, strict: T.untyped).returns(Result)}
-            def self.from_hash(hash, strict = nil)
-              super(hash, strict)
-            end
 
             # @since 0.1.0
             prop :key, T.nilable(String), name: "key"
@@ -243,6 +360,12 @@ module Onlyoffice
 
             # @since 0.1.0
             prop :version, T.nilable(String), name: "version"
+
+            # @since 0.1.0
+            sig {params(hash: T.untyped, strict: T.untyped).returns(Result)}
+            def self.from_hash(hash, strict = nil)
+              super(hash, strict)
+            end
           end
 
           # do makes a request to the command service. It returns an empty

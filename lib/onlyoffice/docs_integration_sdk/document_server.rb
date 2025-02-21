@@ -18,4 +18,12 @@
 # frozen_string_literal: true
 
 require "sorbet-runtime"
+
+module Onlyoffice
+  module DocsIntegrationSdk
+    # @since 0.1.0
+    module DocumentServer; end
+  end
+end
+
 require_relative "document_server/client"

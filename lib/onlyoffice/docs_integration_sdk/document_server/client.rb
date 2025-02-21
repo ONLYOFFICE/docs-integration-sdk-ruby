@@ -128,6 +128,10 @@ module Onlyoffice
           elsif base_uri
             @http = T.let(Net::HTTP.new(base_uri.host, base_uri.port), Net::HTTP)
             @base_uri = T.let(base_uri.clone, URI::HTTP)
+          else
+            # :nocov:
+            # unreachable
+            # :nocov:
           end
 
           if user_agent
@@ -163,7 +167,7 @@ module Onlyoffice
           c = copy
 
           c.http!.define_singleton_method(:request) do |req, body = nil, &block|
-            req = T.let(req, Net::HTTPRequest)
+            req = T.let(req.clone, Net::HTTPRequest)
 
             if (req.body || req.body_stream) && body
               # Leave it untouched so Ruby can raise an error.
@@ -183,9 +187,9 @@ module Onlyoffice
                 end
               end
             elsif req.body_stream
-              # todo: implement
+              # There are doubts regarding the necessity of implementing this
+              # branch.
             elsif body
-              # todo: cover with tests
               if !jwt.locations.empty?
                 b = JSON.parse(body)
 

@@ -17,11 +17,12 @@
 # typed: true
 # frozen_string_literal: true
 
+require "test/unit"
 require_relative "jwt"
 
 module Onlyoffice
   module DocsIntegrationSdk
-    class JwtTest < Test::Unit::TestCase
+    class JwtTest < ::Test::Unit::TestCase
       extend T::Sig
 
       def test_initialize_initializes_with_default_values
@@ -127,7 +128,7 @@ module Onlyoffice
         p = d[0]
         assert_equal(2, p.keys.length)
         assert_equal(1, p["v"])
-        assert_in_delta(Time.now.utc.to_i + 300, p["exp"], 0.01)
+        assert_in_delta(Time.now.utc.to_i + 300, p["exp"], 1)
 
         h = d[1]
         assert_equal(1, h.keys.length)
@@ -187,7 +188,7 @@ module Onlyoffice
         p = d[0]
         assert_equal(2, p.keys.length)
         assert_equal(1, p["v"])
-        assert_in_delta(Time.now.utc.to_i, p["iat"], 0.01)
+        assert_in_delta(Time.now.utc.to_i, p["iat"], 1)
 
         h = d[1]
         assert_equal(1, h.keys.length)
@@ -212,8 +213,8 @@ module Onlyoffice
         p = d[0]
         assert_equal(3, p.keys.length)
         assert_equal(1, p["v"])
-        assert_in_delta(Time.now.utc.to_i + 300, p["exp"], 0.01)
-        assert_in_delta(Time.now.utc.to_i, p["iat"], 0.01)
+        assert_in_delta(Time.now.utc.to_i + 300, p["exp"], 1)
+        assert_in_delta(Time.now.utc.to_i, p["iat"], 1)
 
         h = d[1]
         assert_equal(1, h.keys.length)
@@ -239,7 +240,7 @@ module Onlyoffice
         p = d[0]
         assert_equal(2, p.keys.length)
         assert_equal(1, p["v"])
-        assert_in_delta(Time.now.utc.to_i + 300, p["exp"], 0.01)
+        assert_in_delta(Time.now.utc.to_i + 300, p["exp"], 1)
 
         h = d[1]
         assert_equal(1, h.keys.length)

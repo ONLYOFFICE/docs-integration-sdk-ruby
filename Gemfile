@@ -32,7 +32,6 @@ group :development do
   gem "sorbet", "0.5.11766"
   gem "tapioca", "0.11.8"
   gem "test-unit", "3.6.7"
-  gem "webmock", "3.25.0"
   gem "webrick", "1.9.1"
   gem "yard", "0.9.37"
   gem "yard-sorbet", "0.8.1"

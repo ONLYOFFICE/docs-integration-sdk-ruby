@@ -17,6 +17,10 @@
 # typed: true
 # frozen_string_literal: true
 
+require "test/unit"
+require_relative "../../jwt"
+require_relative "../../test_test"
+require_relative "../client_test"
 require_relative "conversion"
 
 module Onlyoffice
@@ -24,10 +28,11 @@ module Onlyoffice
     module DocumentServer
       class Client
         class ConversionService
-          class ErrorTest < Test::Unit::TestCase
+          class ErrorTest < ::Test::Unit::TestCase
             extend T::Sig
+            include Test::DescriptiveEnumMarshalling
 
-            sig {returns(T::Array[[Integer, String, Error]])}
+            sig {override.returns(T::Array[[Integer, String, Error]])}
             def cases
               [
                 [
@@ -82,31 +87,14 @@ module Onlyoffice
                 ],
               ]
             end
-
-            def test_serialize_serializes
-              for v, _, c in cases
-                assert_equal(v, c.serialize)
-              end
-            end
-
-            def test_from_serialized_deserializes
-              for v, _, c in cases
-                assert_equal(c, Error.from_serialized(v))
-              end
-            end
-
-            def test_description_returns_the_description
-              for _, d, c in cases
-                assert_equal(d, c.description)
-              end
-            end
           end
 
           class Request
-            class DelimiterTest < Test::Unit::TestCase
+            class DelimiterTest < ::Test::Unit::TestCase
               extend T::Sig
+              include Test::BasicEnumMarshalling
 
-              sig {returns(T::Array[[Integer, Delimiter]])}
+              sig {override.returns(T::Array[[Integer, Delimiter]])}
               def cases
                 [
                   [0, Delimiter::None],
@@ -117,24 +105,13 @@ module Onlyoffice
                   [5, Delimiter::Space],
                 ]
               end
-
-              def test_serialize_serializes
-                for v, c in cases
-                  assert_equal(v, c.serialize)
-                end
-              end
-
-              def test_from_serialized_deserializes
-                for v, c in cases
-                  assert_equal(c, Delimiter.from_serialized(v))
-                end
-              end
             end
 
-            class DocumentLayoutTest < Test::Unit::TestCase
+            class DocumentLayoutTest < ::Test::Unit::TestCase
               extend T::Sig
+              include Test::StructMarshalling
 
-              sig {returns(T::Array[[T.untyped, DocumentLayout]])}
+              sig {override.returns(T::Array[[T.untyped, DocumentLayout]])}
               def cases
                 [
                   [
@@ -155,27 +132,14 @@ module Onlyoffice
                   ],
                 ]
               end
-
-              def test_serialize_serializes
-                for h, c in cases
-                  assert_equal(h, c.serialize)
-                end
-              end
-
-              def test_from_hash_deserializes
-                omit("The == method is not implemented for DocumentLayout")
-
-                for h, c in cases
-                  assert_equal(c, DocumentLayout.from_hash(h))
-                end
-              end
             end
 
             class DocumentRenderer
-              class TextAssociationTest < Test::Unit::TestCase
+              class TextAssociationTest < ::Test::Unit::TestCase
                 extend T::Sig
+                include Test::BasicEnumMarshalling
 
-                sig {returns(T::Array[[String, TextAssociation]])}
+                sig {override.returns(T::Array[[String, TextAssociation]])}
                 def cases
                   [
                     ["blockChar", TextAssociation::BlockChar],
@@ -184,25 +148,14 @@ module Onlyoffice
                     ["plainParagraph", TextAssociation::PlainParagraph],
                   ]
                 end
-
-                def test_serialize_serializes
-                  for v, c in cases
-                    assert_equal(v, c.serialize)
-                  end
-                end
-
-                def test_from_serialized_deserializes
-                  for v, c in cases
-                    assert_equal(c, TextAssociation.from_serialized(v))
-                  end
-                end
               end
             end
 
-            class DocumentRendererTest < Test::Unit::TestCase
+            class DocumentRendererTest < ::Test::Unit::TestCase
               extend T::Sig
+              include Test::StructMarshalling
 
-              sig {returns(T::Array[[T.untyped, DocumentRenderer]])}
+              sig {override.returns(T::Array[[T.untyped, DocumentRenderer]])}
               def cases
                 [
                   [
@@ -219,26 +172,13 @@ module Onlyoffice
                   ],
                 ]
               end
-
-              def test_serialize_serializes
-                for h, c in cases
-                  assert_equal(h, c.serialize)
-                end
-              end
-
-              def test_from_hash_deserializes
-                omit("The == method is not implemented for DocumentRenderer")
-
-                for h, c in cases
-                  assert_equal(c, DocumentRenderer.from_hash(h))
-                end
-              end
             end
 
-            class PdfTest < Test::Unit::TestCase
+            class PdfTest < ::Test::Unit::TestCase
               extend T::Sig
+              include Test::StructMarshalling
 
-              sig {returns(T::Array[[T.untyped, Pdf]])}
+              sig {override.returns(T::Array[[T.untyped, Pdf]])}
               def cases
                 [
                   [
@@ -255,27 +195,14 @@ module Onlyoffice
                   ],
                 ]
               end
-
-              def test_serialize_serializes
-                for h, c in cases
-                  assert_equal(h, c.serialize)
-                end
-              end
-
-              def test_from_hash_deserializes
-                omit("The == method is not implemented for Pdf")
-
-                for h, c in cases
-                  assert_equal(c, Pdf.from_hash(h))
-                end
-              end
             end
 
             class SpreadsheetLayout
-              class MarginsTest < Test::Unit::TestCase
+              class MarginsTest < ::Test::Unit::TestCase
                 extend T::Sig
+                include Test::StructMarshalling
 
-                sig {returns(T::Array[[T.untyped, Margins]])}
+                sig {override.returns(T::Array[[T.untyped, Margins]])}
                 def cases
                   [
                     [
@@ -298,50 +225,26 @@ module Onlyoffice
                     ],
                   ]
                 end
-
-                def test_serialize_serializes
-                  for h, c in cases
-                    assert_equal(h, c.serialize)
-                  end
-                end
-
-                def test_from_hash_deserializes
-                  omit("The == method is not implemented for Margins")
-
-                  for h, c in cases
-                    assert_equal(c, Margins.from_hash(h))
-                  end
-                end
               end
 
-              class OrientationTest < Test::Unit::TestCase
+              class OrientationTest < ::Test::Unit::TestCase
                 extend T::Sig
+                include Test::BasicEnumMarshalling
 
-                sig {returns(T::Array[[String, Orientation]])}
+                sig {override.returns(T::Array[[String, Orientation]])}
                 def cases
                   [
                     ["landscape", Orientation::Landscape],
                     ["portrait", Orientation::Portrait],
                   ]
                 end
-
-                def test_serialize_serializes
-                  for v, c in cases
-                    assert_equal(v, c.serialize)
-                  end
-                end
-
-                def test_from_serialized_deserializes
-                  for v, c in cases
-                    assert_equal(c, Orientation.from_serialized(v))
-                  end
-                end
               end
 
-              class PageSizeTest < Test::Unit::TestCase
+              class PageSizeTest < ::Test::Unit::TestCase
                 extend T::Sig
+                include Test::StructMarshalling
 
-                sig {returns(T::Array[[T.untyped, PageSize]])}
+                sig {override.returns(T::Array[[T.untyped, PageSize]])}
                 def cases
                   [
                     [
@@ -360,27 +263,14 @@ module Onlyoffice
                     ],
                   ]
                 end
-
-                def test_serialize_serializes
-                  for h, c in cases
-                    assert_equal(h, c.serialize)
-                  end
-                end
-
-                def test_from_hash_deserializes
-                  omit("The == method is not implemented for PageSize")
-
-                  for h, c in cases
-                    assert_equal(c, PageSize.from_hash(h))
-                  end
-                end
               end
             end
 
-            class SpreadsheetLayoutTest < Test::Unit::TestCase
+            class SpreadsheetLayoutTest < ::Test::Unit::TestCase
               extend T::Sig
+              include Test::StructMarshalling
 
-              sig {returns(T::Array[[T.untyped, SpreadsheetLayout]])}
+              sig {override.returns(T::Array[[T.untyped, SpreadsheetLayout]])}
               def cases
                 [
                   [
@@ -421,27 +311,14 @@ module Onlyoffice
                   ],
                 ]
               end
-
-              def test_serialize_serializes
-                for h, c in cases
-                  assert_equal(h, c.serialize)
-                end
-              end
-
-              def test_from_hash_deserializes
-                omit("The == method is not implemented for SpreadsheetLayout")
-
-                for h, c in cases
-                  assert_equal(c, SpreadsheetLayout.from_hash(h))
-                end
-              end
             end
 
             class Thumbnail
-              class AspectTest < Test::Unit::TestCase
+              class AspectTest < ::Test::Unit::TestCase
                 extend T::Sig
+                include Test::BasicEnumMarshalling
 
-                sig {returns(T::Array[[Integer, Aspect]])}
+                sig {override.returns(T::Array[[Integer, Aspect]])}
                 def cases
                   [
                     [0, Aspect::Stretch],
@@ -449,25 +326,14 @@ module Onlyoffice
                     [2, Aspect::Page],
                   ]
                 end
-
-                def test_serialize_serializes
-                  for v, c in cases
-                    assert_equal(v, c.serialize)
-                  end
-                end
-
-                def test_from_serialized_deserializes
-                  for v, c in cases
-                    assert_equal(c, Aspect.from_serialized(v))
-                  end
-                end
               end
             end
 
-            class ThumbnailTest < Test::Unit::TestCase
+            class ThumbnailTest < ::Test::Unit::TestCase
               extend T::Sig
+              include Test::StructMarshalling
 
-              sig {returns(T::Array[[T.untyped, Thumbnail]])}
+              sig {override.returns(T::Array[[T.untyped, Thumbnail]])}
               def cases
                 [
                   [
@@ -490,27 +356,14 @@ module Onlyoffice
                   ],
                 ]
               end
-
-              def test_serialize_serializes
-                for h, c in cases
-                  assert_equal(h, c.serialize)
-                end
-              end
-
-              def test_from_hash_deserializes
-                omit("The == method is not implemented for Thumbnail")
-
-                for h, c in cases
-                  assert_equal(c, Thumbnail.from_hash(h))
-                end
-              end
             end
           end
 
-          class RequestTest < Test::Unit::TestCase
+          class RequestTest < ::Test::Unit::TestCase
             extend T::Sig
+            include Test::StructMarshalling
 
-            sig {returns(T::Array[[T.untyped, Request]])}
+            sig {override.returns(T::Array[[T.untyped, Request]])}
             def cases
               [
                 [
@@ -575,259 +428,252 @@ module Onlyoffice
                 ],
               ]
             end
-
-            def test_serialize_serializes
-              for c in cases
-                assert_equal(c[0], c[1].serialize)
-              end
-            end
-
-            def test_from_hash_deserializes
-              omit("The == method is not implemented for Request")
-
-              for c in cases
-                assert_equal(c[1], Request.from_hash(c[0]))
-              end
-            end
           end
         end
 
-        class ConversionServiceTest < Test::Unit::TestCase
+        class ConversionServiceTest < ::Test::Unit::TestCase
           extend T::Sig
+          include Test::DocumentServer::Client
+
+          sig {returns(String)}
+          def req_s
+            '{"async":true}'
+          end
+
+          sig {returns(T::Hash[String, T.untyped])}
+          def req_h
+            {"async" => true}
+          end
+
+          sig {returns(ConversionService::Request)}
+          def req_o
+            req = ConversionService::Request.new(async: true)
+          end
+
+          sig {returns(String)}
+          def res_s
+            '{"endConvert":"true"}'
+          end
+
+          sig {returns(ConversionService::Result)}
+          def res_o
+            ConversionService::Result.new(end_convert: true)
+          end
 
           def test_do_does
-            c = ClientTest.client
-            m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c, m)
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h, body: {"async" => true}).
-              to_return(body: '{"endConvert":true}')
+            m = "POST"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "ConvertService.ashx"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-            req = ConversionService::Request.new(async: true)
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers_with_content_type(m, u, req)
+              t.assert_equal(t.req_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.res_s)
+            end
 
-            con, res = c.conversion.do(req)
+            c = Client.new(base_uri: u, http: h)
+
+            con, res = c.conversion.do(req_o)
             assert_nil(res.error)
 
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_equal('{"async":true}', res.request.body)
-
-            assert_equal('{"endConvert":true}', res.response.body)
-
-            # assert_equal(
-            #   ConversionService::Result.new(
-            #     end_convert: true,
-            #   ),
-            #   con,
-            # )
+            assert_equal(res_s, res.response.body)
+            # todo: assert_equal(res_o, con)
           end
 
-          def test_do_does_with_a_subpath
-            c = ClientTest.client_with_a_subpath
-            m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c, m)
+          def test_do_does_with_the_subpath
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h, body: {"async" => true}).
-              to_return(body: '{"endConvert":true}')
+            m = "POST"
+            u = T.cast(URI.parse("http://localhost:8080/sub/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "ConvertService.ashx"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-            req = ConversionService::Request.new(async: true)
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers_with_content_type(m, u, req)
+              t.assert_equal(t.req_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.res_s)
+            end
 
-            con, res = c.conversion.do(req)
+            c = Client.new(base_uri: u, http: h)
+
+            con, res = c.conversion.do(req_o)
             assert_nil(res.error)
 
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_equal('{"async":true}', res.request.body)
-
-            assert_equal('{"endConvert":true}', res.response.body)
-
-            # assert_equal(
-            #   ConversionService::Result.new(
-            #     end_convert: true,
-            #   ),
-            #   con,
-            # )
+            assert_equal(res_s, res.response.body)
+            # todo: assert_equal(res_o, con)
           end
 
-          def test_exec_executes_with_a_user_agent
-            c = ClientTest.client_with_a_user_agent
-            m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c, m)
+          def test_do_does_with_the_user_agent
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h, body: {"async" => true}).
-              to_return(body: '{"endConvert":true}')
+            m = "POST"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "ConvertService.ashx"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-            req = ConversionService::Request.new(async: true)
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers_with_content_type_and_custom_user_agent(m, u, "my-agent", req)
+              t.assert_equal(t.req_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.res_s)
+            end
 
-            con, res = c.conversion.do(req)
+            c = Client.new(base_uri: u, http: h, user_agent: "my-agent")
+
+            con, res = c.conversion.do(req_o)
             assert_nil(res.error)
 
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_equal('{"async":true}', res.request.body)
-
-            assert_equal('{"endConvert":true}', res.response.body)
-
-            # assert_equal(
-            #   ConversionService::Result.new(
-            #     end_convert: true,
-            #   ),
-            #   con,
-            # )
+            assert_equal(res_s, res.response.body)
+            # todo: assert_equal(res_o, con)
           end
 
-          def test_exec_executes_with_a_jwt
-            c = ClientTest.client_with_a_jwt
-            m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c, m)
+          def test_do_does_with_the_jwt
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h, body: /.+/).
-              to_return(body: '{"endConvert":true}')
+            w = DocsIntegrationSdk::Jwt.new(secret: "***")
+            m = "POST"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "ConvertService.ashx"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-            req = ConversionService::Request.new(async: true)
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers_with_jwt(m, u, w, t.req_h, req)
+              t.check_request_body_with_jwt(w, t.req_h, req)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.res_s)
+            end
 
-            con, res = c.conversion.do(req)
+            j = Jwt.new(jwt: w)
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            con, res = c.conversion.do(req_o)
             assert_nil(res.error)
 
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            # assert_equal(h, res.request.to_hash)
-            # assert_equal('{"async":true}', res.request.body)
-
-            assert_equal('{"endConvert":true}', res.response.body)
-
-            # assert_equal(
-            #   ConversionService::Result.new(
-            #     end_convert: true,
-            #   ),
-            #   con,
-            # )
+            assert_equal(res_s, res.response.body)
+            # todo: assert_equal(res_o, con)
           end
 
           def test_do_returns_an_error_if_the_response_body_is_invalid_json
-            c = ClientTest.client_with_a_user_agent
-            m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c, m)
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h, body: {"async" => true}).
-              to_return(body: "}")
+            m = "POST"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "ConvertService.ashx"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-            req = ConversionService::Request.new(async: true)
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers_with_content_type(m, u, req)
+              t.assert_equal(t.req_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok("}")
+            end
 
-            con, res = c.conversion.do(req)
+            c = Client.new(base_uri: u, http: h)
+
+            con, res = c.conversion.do(req_o)
 
             err = T.cast(res.error, JSON::ParserError)
             assert_equal("unexpected token at '}'", err.message)
 
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_equal('{"async":true}', res.request.body)
-
             assert_equal("}", res.response.body)
-
-            # assert_equal(
-            #   ConversionService::Result.new(),
-            #   con,
-            # )
+            # todo: assert_equal(ConversionService::Result.new, con)
           end
 
           def test_do_returns_an_error_if_the_doing_fails
             for v in ConversionService::Error.values
-              c = ClientTest.client_with_a_user_agent
-              m, e = endpoint(c)
-              h = ClientTest.headers_with_content_type(c, m)
+              t = self
 
-              WebMock.stub_request(m.downcase.to_sym, e).
-                with(headers: h, body: {"async" => true}).
-                to_return(body: "{\"error\":#{v.serialize}}")
+              m = "POST"
+              u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+              p = T.cast(URI.join(u.to_s, "ConvertService.ashx"), URI::HTTP)
+              h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-              req = ConversionService::Request.new(async: true)
+              h.define_singleton_method(:request) do |req, body = nil, &block|
+                t.check_request_basics(m, p, req)
+                t.check_request_headers_with_content_type(m, u, req)
+                t.assert_equal(t.req_s, req.body)
+                t.assert_nil(body)
+                t.assert_nil(block)
+                t.create_ok("{\"error\":#{v.serialize}}")
+              end
 
-              con, res = c.conversion.do(req)
+              c = Client.new(base_uri: u, http: h)
+
+              con, res = c.conversion.do(req_o)
               assert_equal(v, res.error)
 
-              assert_equal(m, res.request.method)
-              assert_equal(e, res.request.uri)
-              assert_equal(h, res.request.to_hash)
-              assert_equal('{"async":true}', res.request.body)
-
               assert_equal("{\"error\":#{v.serialize}}", res.response.body)
-
-              # assert_equal(
-              #   ConversionService::Result.new(),
-              #   con,
-              # )
+              # todo: assert_equal(ConversionService::Result.new, con)
             end
           end
 
           def test_do_returns_an_error_if_the_doing_fails_with_an_unknown_error
-            c = ClientTest.client_with_a_user_agent
-            m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c, m)
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h, body: {"async" => true}).
-              to_return(body: '{"error":9999}')
+            m = "POST"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "ConvertService.ashx"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-            req = ConversionService::Request.new(async: true)
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers_with_content_type(m, u, req)
+              t.assert_equal(t.req_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok('{"error":9999}')
+            end
 
-            con, res = c.conversion.do(req)
+            c = Client.new(base_uri: u, http: h)
+
+            con, res = c.conversion.do(req_o)
 
             err = T.cast(res.error, KeyError)
             assert_equal("Enum Onlyoffice::DocsIntegrationSdk::DocumentServer::Client::ConversionService::Error key not found: 9999", err.message)
 
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_equal('{"async":true}', res.request.body)
-
             assert_equal('{"error":9999}', res.response.body)
-
-            # assert_equal(
-            #   ConversionService::Result.new(),
-            #   con,
-            # )
+            # todo: assert_equal(ConversionService::Result.new, con)
           end
 
           def test_do_ignores_unknown_keys_in_the_response
-            c = ClientTest.client_with_a_user_agent
-            m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c, m)
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h, body: {"async" => true}).
-              to_return(body: '{"unknown":true}')
+            m = "POST"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "ConvertService.ashx"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-            req = ConversionService::Request.new(async: true)
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers_with_content_type(m, u, req)
+              t.assert_equal(t.req_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok('{"unknown":true}')
+            end
 
-            con, res = c.conversion.do(req)
+            c = Client.new(base_uri: u, http: h)
+
+            con, res = c.conversion.do(req_o)
             assert_nil(res.error)
 
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_equal('{"async":true}', res.request.body)
-
             assert_equal('{"unknown":true}', res.response.body)
-
-            # assert_equal(
-            #   ConversionService::Result.new(),
-            #   con,
-            # )
-          end
-
-          sig {params(c: Client).returns([String, URI::HTTP])}
-          def endpoint(c)
-            ["POST", T.cast(URI.join(c.base_uri, "ConvertService.ashx"), URI::HTTP)]
+            # todo: assert_equal(ConversionService::Result.new, con)
           end
         end
       end

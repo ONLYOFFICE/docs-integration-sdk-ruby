@@ -65,6 +65,10 @@ module Onlyoffice
               case self
               when Failed
                 "Healthcheck failed"
+              else
+                # :nocov:
+                # unreachable
+                # :nocov:
               end
             end
           end

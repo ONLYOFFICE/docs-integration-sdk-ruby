@@ -17,6 +17,10 @@
 # typed: true
 # frozen_string_literal: true
 
+require "test/unit"
+require_relative "../../jwt"
+require_relative "../../test_test"
+require_relative "../client_test"
 require_relative "command"
 
 module Onlyoffice
@@ -24,10 +28,11 @@ module Onlyoffice
     module DocumentServer
       class Client
         class CommandService
-          class ErrorTest < Test::Unit::TestCase
+          class ErrorTest < ::Test::Unit::TestCase
             extend T::Sig
+            include Test::DescriptiveEnumMarshalling
 
-            sig {returns(T::Array[[Integer, String, Error]])}
+            sig {override.returns(T::Array[[Integer, String, Error]])}
             def cases
               [
                 [
@@ -67,31 +72,14 @@ module Onlyoffice
                 ],
               ]
             end
-
-            def test_serialize_serializes
-              for v, _, c in cases
-                assert_equal(v, c.serialize)
-              end
-            end
-
-            def test_from_serialized_deserializes
-              for v, _, c in cases
-                assert_equal(c, Error.from_serialized(v))
-              end
-            end
-
-            def test_description_returns_the_description
-              for _, d, c in cases
-                assert_equal(d, c.description)
-              end
-            end
           end
 
           class Request
-            class CTest < Test::Unit::TestCase
+            class CTest < ::Test::Unit::TestCase
               extend T::Sig
+              include Test::BasicEnumMarshalling
 
-              sig {returns(T::Array[[String, C]])}
+              sig {override.returns(T::Array[[String, C]])}
               def cases
                 [
                   ["deleteForgotten", C::DeleteForgotten],
@@ -105,24 +93,196 @@ module Onlyoffice
                   ["version", C::Version],
                 ]
               end
+            end
 
-              def test_serialize_serializes
-                for v, c in cases
-                  assert_equal(v, c.serialize)
+            class LicenseTest < ::Test::Unit::TestCase
+              extend T::Sig
+              include Test::StructMarshalling
+
+              sig {override.returns(T::Array[[T.untyped, License]])}
+              def cases
+                [
+                  [
+                    {},
+                    License.new,
+                  ],
+                  [
+                    {
+                      "end_date" => "2025-01-01",
+                      "trial" => true,
+                      "customization" => true,
+                      "connections" => 10,
+                      "connections_view" => 10,
+                      "users_count" => 10,
+                      "users_view_count" => 10,
+                      "users_expire" => 10,
+                    },
+                    License.new(
+                      end_date: "2025-01-01",
+                      trial: true,
+                      customization: true,
+                      connections: 10,
+                      connections_view: 10,
+                      users_count: 10,
+                      users_view_count: 10,
+                      users_expire: 10,
+                    ),
+                  ],
+                ]
+              end
+            end
+
+            class Server
+              class ResultTypeTest < ::Test::Unit::TestCase
+                extend T::Sig
+                include Test::DescriptiveEnumMarshalling
+
+                sig {override.returns(T::Array[[Integer, String, ResultType]])}
+                def cases
+                  [
+                    [
+                      1,
+                      "An error occurred",
+                      ResultType::Error,
+                    ],
+                    [
+                      2,
+                      "The license expired",
+                      ResultType::LicenseExpired,
+                    ],
+                    [
+                      3,
+                      "The license is still available",
+                      ResultType::LicenseAvailable,
+                    ],
+                    [
+                      6,
+                      "The trial license expired",
+                      ResultType::TrialLicenseExpired,
+                    ],
+                  ]
                 end
               end
 
-              def test_from_serialized_deserializes
-                for v, c in cases
-                  assert_equal(c, C.from_serialized(v))
+              class PackageTypeTest < ::Test::Unit::TestCase
+                extend T::Sig
+                include Test::BasicEnumMarshalling
+
+                sig {override.returns(T::Array[[Integer, PackageType]])}
+                def cases
+                  [
+                    [0, PackageType::OpenSource],
+                    [1, PackageType::Enterprise],
+                    [2, PackageType::Developer],
+                  ]
                 end
               end
             end
 
-            class MetaTest < Test::Unit::TestCase
+            class ServerTest < ::Test::Unit::TestCase
               extend T::Sig
+              include Test::StructMarshalling
 
-              sig {returns(T::Array[[T.untyped, Meta]])}
+              sig {override.returns(T::Array[[T.untyped, Server]])}
+              def cases
+                [
+                  [
+                    {},
+                    Server.new,
+                  ],
+                  [
+                    {
+                      "resultType" => 1,
+                      "packageType" => 1,
+                      "buildDate" => "2025-01-01",
+                      "buildVersion" => "1.0",
+                      "buildNumber" => 1,
+                    },
+                    Server.new(
+                      result_type: Server::ResultType::Error,
+                      package_type: Server::PackageType::Enterprise,
+                      build_date: "2025-01-01",
+                      build_version: "1.0",
+                      build_number: 1,
+                    ),
+                  ],
+                ]
+              end
+            end
+
+            class Quota
+              class UserTest < ::Test::Unit::TestCase
+                extend T::Sig
+                include Test::StructMarshalling
+
+                sig {override.returns(T::Array[[T.untyped, User]])}
+                def cases
+                  [
+                    [
+                      {},
+                      User.new,
+                    ],
+                    [
+                      {
+                        "userid" => "user_1",
+                        "expire" => "2025-01-01",
+                      },
+                      User.new(
+                        userid: "user_1",
+                        expire: "2025-01-01",
+                      ),
+                    ],
+                  ]
+                end
+              end
+            end
+
+            class QuotaTest < ::Test::Unit::TestCase
+              extend T::Sig
+              include Test::StructMarshalling
+
+              sig {override.returns(T::Array[[T.untyped, Quota]])}
+              def cases
+                [
+                  [
+                    {},
+                    Quota.new,
+                  ],
+                  [
+                    {
+                      "users" => [
+                        {
+                          "userid" => "user_1",
+                        },
+                      ],
+                      "users_view" => [
+                        {
+                          "userid" => "user_1",
+                        },
+                      ],
+                    },
+                    Quota.new(
+                      users: [
+                        Quota::User.new(
+                          userid: "user_1",
+                        ),
+                      ],
+                      users_view: [
+                        Quota::User.new(
+                          userid: "user_1",
+                        ),
+                      ],
+                    ),
+                  ],
+                ]
+              end
+            end
+
+            class MetaTest < ::Test::Unit::TestCase
+              extend T::Sig
+              include Test::StructMarshalling
+
+              sig {override.returns(T::Array[[T.untyped, Meta]])}
               def cases
                 [
                   [
@@ -139,27 +299,14 @@ module Onlyoffice
                   ],
                 ]
               end
-
-              def test_serialize_serializes
-                for v, c in cases
-                  assert_equal(v, c.serialize)
-                end
-              end
-
-              def test_from_hash_deserializes
-                omit("The == method is not implemented for Meta")
-
-                for v, c in cases
-                  assert_equal(c, Meta.from_hash(v))
-                end
-              end
             end
           end
 
-          class RequestTest < Test::Unit::TestCase
+          class RequestTest < ::Test::Unit::TestCase
             extend T::Sig
+            include Test::StructMarshalling
 
-            sig {returns(T::Array[[T.untyped, Request]])}
+            sig {override.returns(T::Array[[T.untyped, Request]])}
             def cases
               [
                 [
@@ -172,9 +319,15 @@ module Onlyoffice
                     "key" => "***",
                     "users" => ["User 1", "User 2"],
                     "userdata" => "Data",
-                    "license" => {},
-                    "server" => {},
-                    "quota" => {},
+                    "license" => {
+                      "end_date" => "2025-01-01",
+                    },
+                    "server" => {
+                      "resultType" => 1,
+                    },
+                    "quota" => {
+                      "users" => [],
+                    },
                     "meta" => {
                       "title" => "Title",
                     },
@@ -184,9 +337,15 @@ module Onlyoffice
                     key: "***",
                     users: ["User 1", "User 2"],
                     userdata: "Data",
-                    license: Request::License.new,
-                    server: Request::Server.new,
-                    quota: Request::Quota.new,
+                    license: Request::License.new(
+                      end_date: "2025-01-01",
+                    ),
+                    server: Request::Server.new(
+                      result_type: Request::Server::ResultType::Error,
+                    ),
+                    quota: Request::Quota.new(
+                      users: [],
+                    ),
                     meta: Request::Meta.new(
                       title: "Title",
                     ),
@@ -194,26 +353,13 @@ module Onlyoffice
                 ],
               ]
             end
-
-            def test_serialize_serializes
-              for v, c in cases
-                assert_equal(v, c.serialize)
-              end
-            end
-
-            def test_from_hash_deserializes
-              omit("The == method is not implemented for Request")
-
-              for v, c in cases
-                assert_equal(c, Request.from_hash(v))
-              end
-            end
           end
 
-          class ResultTest < Test::Unit::TestCase
+          class ResultTest < ::Test::Unit::TestCase
             extend T::Sig
+            include Test::StructMarshalling
 
-            sig {returns(T::Array[[T.untyped, Result]])}
+            sig {override.returns(T::Array[[T.untyped, Result]])}
             def cases
               [
                 [
@@ -238,179 +384,174 @@ module Onlyoffice
                 ],
               ]
             end
-
-            def test_serialize_serializes
-              for v, c in cases
-                assert_equal(v, c.serialize)
-              end
-            end
-
-            def test_from_hash_deserializes
-              omit("The == method is not implemented for Result")
-
-              for v, c in cases
-                assert_equal(c, Result.from_hash(v))
-              end
-            end
           end
         end
 
-        class CommandServiceTest < Test::Unit::TestCase
+        class CommandServiceTest < ::Test::Unit::TestCase
           extend T::Sig
+          include Test::DocumentServer::Client
+
+          sig {returns(String)}
+          def req_s
+            '{"c":"info"}'
+          end
+
+          sig {returns(T::Hash[String, T.untyped])}
+          def req_h
+            {"c" => "info"}
+          end
+
+          sig {returns(CommandService::Request)}
+          def req_o
+            req = CommandService::Request.new(
+              c: CommandService::Request::C::Info,
+            )
+          end
+
+          sig {returns(String)}
+          def res_s
+            '{"key":"***"}'
+          end
+
+          sig {returns(CommandService::Result)}
+          def res_o
+            CommandService::Result.new(
+              key: "***",
+            )
+          end
 
           def test_do_does
-            c = ClientTest.client
-            m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c, m)
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h, body: {"c" => "info"}).
-              to_return(body: '{"key":"***"}')
+            m = "POST"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "coauthoring/CommandService.ashx"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-            req = CommandService::Request.new(
-              c: CommandService::Request::C::Info,
-            )
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers_with_content_type(m, u, req)
+              t.assert_equal(t.req_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.res_s)
+            end
 
-            com, res = c.command.do(req)
+            c = Client.new(base_uri: u, http: h)
+
+            com, res = c.command.do(req_o)
             assert_nil(res.error)
 
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_equal('{"c":"info"}', res.request.body)
-
-            assert_equal('{"key":"***"}', res.response.body)
-
-            # assert_equal(
-            #   CommandService::Result.new(
-            #     key: "***",
-            #   ),
-            #   com,
-            # )
+            assert_equal(res_s, res.response.body)
+            # todo: assert_equal(res_o, com)
           end
 
-          def test_do_does_with_a_subpath
-            c = ClientTest.client_with_a_subpath
-            m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c, m)
+          def test_do_does_with_the_subpath
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h, body: {"c" => "info"}).
-              to_return(body: '{"key":"***"}')
+            m = "POST"
+            u = T.cast(URI.parse("http://localhost:8080/sub/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "coauthoring/CommandService.ashx"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-            req = CommandService::Request.new(
-              c: CommandService::Request::C::Info,
-            )
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers_with_content_type(m, u, req)
+              t.assert_equal(t.req_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.res_s)
+            end
 
-            com, res = c.command.do(req)
+            c = Client.new(base_uri: u, http: h)
+
+            com, res = c.command.do(req_o)
             assert_nil(res.error)
 
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_equal('{"c":"info"}', res.request.body)
-
-            assert_equal('{"key":"***"}', res.response.body)
-
-            # assert_equal(
-            #   CommandService::Result.new(
-            #     key: "***",
-            #   ),
-            #   com,
-            # )
+            assert_equal(res_s, res.response.body)
+            # todo: assert_equal(res_o, com)
           end
 
-          def test_do_does_with_a_user_agent
-            c = ClientTest.client_with_a_user_agent
-            m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c, m)
+          def test_do_does_with_the_user_agent
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h, body: {"c" => "info"}).
-              to_return(body: '{"key":"***"}')
+            m = "POST"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "coauthoring/CommandService.ashx"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-            req = CommandService::Request.new(
-              c: CommandService::Request::C::Info,
-            )
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers_with_content_type_and_custom_user_agent(m, u, "my-agent", req)
+              t.assert_equal(t.req_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.res_s)
+            end
 
-            com, res = c.command.do(req)
+            c = Client.new(base_uri: u, http: h, user_agent: "my-agent")
+
+            com, res = c.command.do(req_o)
             assert_nil(res.error)
 
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_equal('{"c":"info"}', res.request.body)
-
-            assert_equal('{"key":"***"}', res.response.body)
-
-            # assert_equal(
-            #   CommandService::Result.new(
-            #     key: "***",
-            #   ),
-            #   com,
-            # )
+            assert_equal(res_s, res.response.body)
+            # todo: assert_equal(res_o, com)
           end
 
-          def test_do_does_with_a_jwt
-            c = ClientTest.client_with_a_jwt
-            m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c, m)
+          def test_do_does_with_the_jwt
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h, body: /.+/).
-              to_return(body: '{"key":"***"}')
+            w = DocsIntegrationSdk::Jwt.new(secret: "***")
+            m = "POST"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "coauthoring/CommandService.ashx"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-            req = CommandService::Request.new(
-              c: CommandService::Request::C::Info,
-            )
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers_with_jwt(m, u, w, t.req_h, req)
+              t.check_request_body_with_jwt(w, t.req_h, req)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.res_s)
+            end
 
-            com, res = c.command.do(req)
+            j = Jwt.new(jwt: w)
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            com, res = c.command.do(req_o)
             assert_nil(res.error)
 
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            # assert_equal(h, res.request.to_hash)
-            # assert_equal('{"c":"info"}', res.request.body)
-
-            assert_equal('{"key":"***"}', res.response.body)
-
-            # assert_equal(
-            #   CommandService::Result.new(
-            #     key: "***",
-            #   ),
-            #   com,
-            # )
+            assert_equal(res_s, res.response.body)
+            # todo: assert_equal(res_o, com)
           end
 
           def test_do_returns_an_error_if_the_response_body_is_invalid_json
-            c = ClientTest.client
-            m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c, m)
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h, body: {"c" => "info"}).
-              to_return(body: "}")
+            m = "POST"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "coauthoring/CommandService.ashx"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-            req = CommandService::Request.new(
-              c: CommandService::Request::C::Info,
-            )
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers_with_content_type(m, u, req)
+              t.assert_equal(t.req_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok("}")
+            end
 
-            com, res = c.command.do(req)
+            c = Client.new(base_uri: u, http: h)
+
+            com, res = c.command.do(req_o)
 
             err = T.cast(res.error, JSON::ParserError)
             assert_equal("unexpected token at '}'", err.message)
 
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_equal('{"c":"info"}', res.request.body)
-
             assert_equal("}", res.response.body)
-
-            # assert_equal(
-            #   CommandService::Result.new(),
-            #   com,
-            # )
+            # todo: assert_equal(CommandService::Result.new, com)
           end
 
           def test_do_returns_an_error_if_the_doing_fails
@@ -419,127 +560,110 @@ module Onlyoffice
                 next
               end
 
-              c = ClientTest.client
-              m, e = endpoint(c)
-              h = ClientTest.headers_with_content_type(c, m)
+              t = self
 
-              WebMock.stub_request(m.downcase.to_sym, e).
-                with(headers: h, body: {"c" => "info"}).
-                to_return(body: "{\"error\":#{v.serialize}}")
+              m = "POST"
+              u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+              p = T.cast(URI.join(u.to_s, "coauthoring/CommandService.ashx"), URI::HTTP)
+              h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-              req = CommandService::Request.new(
-                c: CommandService::Request::C::Info,
-              )
+              h.define_singleton_method(:request) do |req, body = nil, &block|
+                t.check_request_basics(m, p, req)
+                t.check_request_headers_with_content_type(m, u, req)
+                t.assert_equal(t.req_s, req.body)
+                t.assert_nil(body)
+                t.assert_nil(block)
+                t.create_ok("{\"error\":#{v.serialize}}")
+              end
 
-              com, res = c.command.do(req)
+              c = Client.new(base_uri: u, http: h)
+
+              com, res = c.command.do(req_o)
               assert_equal(v, res.error)
 
-              assert_equal(m, res.request.method)
-              assert_equal(e, res.request.uri)
-              assert_equal(h, res.request.to_hash)
-              assert_equal('{"c":"info"}', res.request.body)
-
               assert_equal("{\"error\":#{v.serialize}}", res.response.body)
-
-              # assert_equal(
-              #   CommandService::Result.new(),
-              #   com,
-              # )
+              # todo: assert_equal(CommandService::Result.new, com)
             end
           end
 
           def test_do_returns_an_error_if_the_doing_fails_with_an_unknown_error
-            c = ClientTest.client
-            m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c, m)
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h, body: {"c" => "info"}).
-              to_return(body: '{"error":9999}')
+            m = "POST"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "coauthoring/CommandService.ashx"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-            req = CommandService::Request.new(
-              c: CommandService::Request::C::Info,
-            )
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers_with_content_type(m, u, req)
+              t.assert_equal(t.req_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok('{"error":9999}')
+            end
 
-            com, res = c.command.do(req)
+            c = Client.new(base_uri: u, http: h)
+
+            com, res = c.command.do(req_o)
 
             err = T.cast(res.error, KeyError)
             assert_equal("Enum Onlyoffice::DocsIntegrationSdk::DocumentServer::Client::CommandService::Error key not found: 9999", err.message)
 
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_equal('{"c":"info"}', res.request.body)
-
             assert_equal('{"error":9999}', res.response.body)
-
-            # assert_equal(
-            #   CommandService::Result.new(),
-            #   com,
-            # )
+            # todo: assert_equal(CommandService::Result.new, com)
           end
 
           def test_do_ignores_the_error_if_it_is_none
-            c = ClientTest.client
-            m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c, m)
+            t = self
 
-            WebMock.stub_request(m.downcase.to_sym, e).
-              with(headers: h, body: {"c" => "info"}).
-              to_return(body: '{"error":0,"key":"***"}')
+            m = "POST"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "coauthoring/CommandService.ashx"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-            req = CommandService::Request.new(
-              c: CommandService::Request::C::Info,
-            )
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers_with_content_type(m, u, req)
+              t.assert_equal(t.req_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok('{"error":0,"key":"***"}')
+            end
 
-            com, res = c.command.do(req)
+            c = Client.new(base_uri: u, http: h)
+
+            com, res = c.command.do(req_o)
             assert_nil(res.error)
 
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_equal('{"c":"info"}', res.request.body)
-
             assert_equal('{"error":0,"key":"***"}', res.response.body)
-
-            # assert_equal(
-            #   CommandService::Result.new(),
-            #   com,
-            # )
+            # todo: assert_equal(CommandService::Result.new, com)
           end
 
           def test_do_ignores_unknown_keys_in_the_response
-            c = ClientTest.client
-            m, e = endpoint(c)
-            h = ClientTest.headers_with_content_type(c, m)
+            t = self
 
-            WebMock.stub_request(:post, e).
-              with(headers: h, body: {"c" => "info"}).
-              to_return(body: '{"unknown":true}')
+            m = "POST"
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            p = T.cast(URI.join(u.to_s, "coauthoring/CommandService.ashx"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-            req = CommandService::Request.new(
-              c: CommandService::Request::C::Info,
-            )
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, p, req)
+              t.check_request_headers_with_content_type(m, u, req)
+              t.assert_equal(t.req_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok('{"unknown":true}')
+            end
 
-            com, res = c.command.do(req)
+            c = Client.new(base_uri: u, http: h)
+
+            com, res = c.command.do(req_o)
             assert_nil(res.error)
 
-            assert_equal(m, res.request.method)
-            assert_equal(e, res.request.uri)
-            assert_equal(h, res.request.to_hash)
-            assert_equal('{"c":"info"}', res.request.body)
-
             assert_equal('{"unknown":true}', res.response.body)
-
-            # assert_equal(
-            #   CommandService::Result.new(),
-            #   com,
-            # )
-          end
-
-          sig {params(c: Client).returns([String, URI::HTTP])}
-          def endpoint(c)
-            ["POST", T.cast(URI.join(c.base_uri.to_s, "coauthoring/CommandService.ashx"), URI::HTTP)]
+            # todo: assert_equal(CommandService::Result.new, com)
           end
         end
       end

@@ -18,6 +18,14 @@
 # frozen_string_literal: true
 
 require "sorbet-runtime"
+
+module Onlyoffice
+  # @since 0.1.0
+  module DocsIntegrationSdk; end
+end
+
+require_relative "docs_integration_sdk/document_editor"
 require_relative "docs_integration_sdk/document_server"
+require_relative "docs_integration_sdk/document_storage"
 require_relative "docs_integration_sdk/jwt"
 require_relative "docs_integration_sdk/version"

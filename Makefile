@@ -69,6 +69,12 @@ test: \
 test: # Run test suite
 	@bundle exec rake test
 
+.PHONY: test-fork
+test-fork: \
+	export BUNDLER_VERSION := $(BUNDLER_VERSION)
+test-fork: # Run each test in a separate process
+	@bundle exec rake test_fork
+
 .PHONY: type
 type: \
 	export BUNDLER_VERSION := $(BUNDLER_VERSION)

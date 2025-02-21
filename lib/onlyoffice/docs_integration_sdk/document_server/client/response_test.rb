@@ -17,13 +17,14 @@
 # typed: true
 # frozen_string_literal: true
 
+require "test/unit"
 require_relative "response"
 
 module Onlyoffice
   module DocsIntegrationSdk
     module DocumentServer
       class Client
-        class ResponseTest < Test::Unit::TestCase
+        class ResponseTest < ::Test::Unit::TestCase
           def test_initialize_initializes_with_default_values
             req = Net::HTTP::Get.new("http://localhost:8080/")
             res = Net::HTTPResponse.new("1.1", "200", "OK")

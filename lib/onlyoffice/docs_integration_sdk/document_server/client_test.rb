@@ -17,13 +17,332 @@
 # typed: true
 # frozen_string_literal: true
 
+require "stringio"
+require "test/unit"
 require_relative "client"
 
 module Onlyoffice
   module DocsIntegrationSdk
+    module Test
+      module DocumentServer
+        module Client
+          extend T::Sig
+          include ::Test::Unit::Assertions
+
+          sig {returns(T::Array[[String, T.class_of(Net::HTTPRequest)]])}
+          def http_methods
+            [
+              ["DELETE", Net::HTTP::Delete],
+              ["GET", Net::HTTP::Get],
+              ["HEAD", Net::HTTP::Head],
+              ["OPTIONS", Net::HTTP::Options],
+              ["PATCH", Net::HTTP::Patch],
+              ["POST", Net::HTTP::Post],
+              ["PUT", Net::HTTP::Put],
+              ["TRACE", Net::HTTP::Trace],
+            ]
+          end
+
+          sig {params(m: String, u: URI::HTTP, req: Net::HTTPRequest).void}
+          def check_request_basics(m, u, req)
+            assert_equal(m, req.method)
+            assert_equal(u, req.uri)
+          end
+
+          sig {params(m: String, u: URI::HTTP, req: Net::HTTPRequest).void}
+          def check_request_headers(m, u, req)
+            h = {
+              "accept" => ["application/json"],
+              "accept-encoding" => ["gzip;q=1.0,deflate;q=0.6,identity;q=0.3"],
+              "host" => ["#{u.host}:#{u.port}"],
+              "user-agent" => [DocsIntegrationSdk::DocumentServer::Client::USER_AGENT],
+            }
+
+            if RUBY_VERSION < "3.0.0" && m == "HEAD"
+              h.delete("accept-encoding")
+            end
+
+            assert_equal(h, req.to_hash)
+          end
+
+          sig {params(m: String, u: URI::HTTP, a: String, req: Net::HTTPRequest).void}
+          def check_request_headers_with_custom_user_agent(m, u, a, req)
+            h = {
+              "accept" => ["application/json"],
+              "accept-encoding" => ["gzip;q=1.0,deflate;q=0.6,identity;q=0.3"],
+              "host" => ["#{u.host}:#{u.port}"],
+              "user-agent" => [a],
+            }
+
+            if RUBY_VERSION < "3.0.0" && m == "HEAD"
+              h.delete("accept-encoding")
+            end
+
+            assert_equal(h, req.to_hash)
+          end
+
+          sig {params(m: String, u: URI::HTTP, req: Net::HTTPRequest).void}
+          def check_request_headers_with_content_type(m, u, req)
+            h = {
+              "accept" => ["application/json"],
+              "accept-encoding" => ["gzip;q=1.0,deflate;q=0.6,identity;q=0.3"],
+              "content-type" => ["application/json"],
+              "host" => ["#{u.host}:#{u.port}"],
+              "user-agent" => [DocsIntegrationSdk::DocumentServer::Client::USER_AGENT],
+            }
+
+            if RUBY_VERSION < "3.0.0" && m == "HEAD"
+              h.delete("accept-encoding")
+            end
+
+            assert_equal(h, req.to_hash)
+          end
+
+          sig {params(m: String, u: URI::HTTP, a: String, req: Net::HTTPRequest).void}
+          def check_request_headers_with_content_type_and_custom_user_agent(m, u, a, req)
+            h = {
+              "accept" => ["application/json"],
+              "accept-encoding" => ["gzip;q=1.0,deflate;q=0.6,identity;q=0.3"],
+              "content-type" => ["application/json"],
+              "host" => ["#{u.host}:#{u.port}"],
+              "user-agent" => [a],
+            }
+
+            if RUBY_VERSION < "3.0.0" && m == "HEAD"
+              h.delete("accept-encoding")
+            end
+
+            assert_equal(h, req.to_hash)
+          end
+
+          sig {params(m: String, u: URI::HTTP, w: JwtDecoding, b: T.untyped, req: Net::HTTPRequest).void}
+          def check_request_headers_with_jwt(m, u, w, b, req)
+            x = {
+              "accept" => ["application/json"],
+              "accept-encoding" => ["gzip;q=1.0,deflate;q=0.6,identity;q=0.3"],
+              "content-type" => ["application/json"],
+              "host" => ["#{u.host}:#{u.port}"],
+              "user-agent" => [DocsIntegrationSdk::DocumentServer::Client::USER_AGENT],
+            }
+
+            if RUBY_VERSION < "3.0.0" && m == "HEAD"
+              x.delete("accept-encoding")
+            end
+
+            y = req.to_hash
+
+            r = y["authorization"]
+            assert_equal(1, r.length)
+            assert_true(r[0].start_with?("Bearer "))
+
+            y.delete("authorization")
+            assert_equal(x, y)
+
+            t = r[0].sub("Bearer ", "")
+            assert_equal(b, w.decode_header(t))
+          end
+
+          sig {params(m: String, u: URI::HTTP, w: JwtDecoding, h: String, b: T::Hash[String, T.untyped], req: Net::HTTPRequest).void}
+          def check_request_headers_with_custom_jwt_header(m, u, w, h, b, req)
+            x = {
+              "accept" => ["application/json"],
+              "accept-encoding" => ["gzip;q=1.0,deflate;q=0.6,identity;q=0.3"],
+              "content-type" => ["application/json"],
+              "host" => ["#{u.host}:#{u.port}"],
+              "user-agent" => [DocsIntegrationSdk::DocumentServer::Client::USER_AGENT],
+            }
+
+            if RUBY_VERSION < "3.0.0" && m == "HEAD"
+              x.delete("accept-encoding")
+            end
+
+            y = req.to_hash
+
+            r = y[h.downcase]
+            assert_equal(1, r.length)
+            assert_true(r[0].start_with?("Bearer "))
+
+            y.delete(h.downcase)
+            assert_equal(x, y)
+
+            t = r[0].sub("Bearer ", "")
+            assert_equal(b, w.decode_header(t))
+          end
+
+          sig {params(m: String, u: URI::HTTP, w: JwtDecoding, s: String, b: T::Hash[String, T.untyped], req: Net::HTTPRequest).void}
+          def check_request_headers_with_custom_jwt_schema(m, u, w, s, b, req)
+            x = {
+              "accept" => ["application/json"],
+              "accept-encoding" => ["gzip;q=1.0,deflate;q=0.6,identity;q=0.3"],
+              "content-type" => ["application/json"],
+              "host" => ["#{u.host}:#{u.port}"],
+              "user-agent" => [DocsIntegrationSdk::DocumentServer::Client::USER_AGENT],
+            }
+
+            if RUBY_VERSION < "3.0.0" && m == "HEAD"
+              x.delete("accept-encoding")
+            end
+
+            y = req.to_hash
+
+            r = y["authorization"]
+            assert_equal(1, r.length)
+            assert_true(r[0].start_with?("#{s} "))
+
+            y.delete("authorization")
+            assert_equal(x, y)
+
+            t = r[0].sub("#{s} ", "")
+            assert_equal(b, w.decode_header(t))
+          end
+
+          sig {params(w: JwtDecoding, b: T::Hash[String, T.untyped], req: Net::HTTPRequest).void}
+          def check_request_body_with_jwt(w, b, req)
+            h = T.let(JSON.parse(req.body), T::Hash[String, T.untyped])
+            assert_equal(b, w.decode_body(h))
+          end
+
+          sig {params(b: String).returns(Net::HTTPResponse)}
+          def create_ok(b)
+            raw =
+              "HTTP/1.1 200 OK\r\n" +
+              "Content-Type: application/json; charset=utf-8\r\n" +
+              "\r\n" +
+              b
+            sock = ::StringIO.new(raw)
+            buf = Net::BufferedIO.new(sock)
+            res = Net::HTTPResponse.read_new(buf)
+            res.reading_body(buf, true) {}
+            res
+          end
+        end
+      end
+    end
+
     module DocumentServer
-      class ClientTest < Test::Unit::TestCase
+      class ClientTest < ::Test::Unit::TestCase
         extend T::Sig
+        include Test::DocumentServer::Client
+
+        sig {returns(String)}
+        def hi_s
+          '{"v":"hi"}'
+        end
+
+        sig {returns(T::Hash[String, T.untyped])}
+        def hi_h
+          {"v" => "hi"}
+        end
+
+        sig {returns(String)}
+        def bye_s
+          '{"v":"bye"}'
+        end
+
+        sig {returns(T::Hash[String, T.untyped])}
+        def bye_h
+          {"v" => "bye"}
+        end
+
+        sig {params(m: String, u: URI::HTTP, req: Net::HTTPRequest).void}
+        def check_ruby_request_headers(m, u, req)
+          h = {
+            "accept" => ["*/*"],
+            "accept-encoding" => ["gzip;q=1.0,deflate;q=0.6,identity;q=0.3"],
+            "host" => ["#{u.host}:#{u.port}"],
+            "user-agent" => ["Ruby"],
+          }
+
+          if RUBY_VERSION < "3.0.0" && m == "HEAD"
+            h.delete("accept-encoding")
+          end
+
+          assert_equal(h, req.to_hash)
+        end
+
+        sig {params(m: String, u: URI::HTTP, w: JwtDecoding, b: T.untyped, req: Net::HTTPRequest).void}
+        def check_ruby_request_headers_with_jwt(m, u, w, b, req)
+          x = {
+            "accept" => ["*/*"],
+            "accept-encoding" => ["gzip;q=1.0,deflate;q=0.6,identity;q=0.3"],
+            "host" => ["#{u.host}:#{u.port}"],
+            "user-agent" => ["Ruby"],
+          }
+
+          if RUBY_VERSION < "3.0.0" && m == "HEAD"
+            x.delete("accept-encoding")
+          end
+
+          y = req.to_hash
+
+          r = y["authorization"]
+          assert_equal(1, r.length)
+          assert_true(r[0].start_with?("Bearer "))
+
+          y.delete("authorization")
+          assert_equal(x, y)
+
+          t = r[0].sub("Bearer ", "")
+          assert_equal(b, w.decode_header(t))
+        end
+
+        sig {params(m: String, u: URI::HTTP, w: JwtDecoding, s: String, b: T::Hash[String, T.untyped], req: Net::HTTPRequest).void}
+        def check_ruby_request_headers_with_custom_jwt_header(m, u, w, s, b, req)
+          x = {
+            "accept" => ["*/*"],
+            "accept-encoding" => ["gzip;q=1.0,deflate;q=0.6,identity;q=0.3"],
+            "host" => ["#{u.host}:#{u.port}"],
+            "user-agent" => ["Ruby"],
+          }
+
+          if RUBY_VERSION < "3.0.0" && m == "HEAD"
+            x.delete("accept-encoding")
+          end
+
+          y = req.to_hash
+
+          r = y[s.downcase]
+          assert_equal(1, r.length)
+          assert_true(r[0].start_with?("Bearer "))
+
+          y.delete(s.downcase)
+          assert_equal(x, y)
+
+          t = r[0].sub("Bearer ", "")
+          assert_equal(b, w.decode_header(t))
+        end
+
+        sig {params(m: String, u: URI::HTTP, w: JwtDecoding, s: String, b: T::Hash[String, T.untyped], req: Net::HTTPRequest).void}
+        def check_ruby_request_headers_with_custom_jwt_schema(m, u, w, s, b, req)
+          x = {
+            "accept" => ["*/*"],
+            "accept-encoding" => ["gzip;q=1.0,deflate;q=0.6,identity;q=0.3"],
+            "host" => ["#{u.host}:#{u.port}"],
+            "user-agent" => ["Ruby"],
+          }
+
+          if RUBY_VERSION < "3.0.0" && m == "HEAD"
+            x.delete("accept-encoding")
+          end
+
+          y = req.to_hash
+
+          r = y["authorization"]
+          assert_equal(1, r.length)
+          assert_true(r[0].start_with?("#{s} "))
+
+          y.delete("authorization")
+          assert_equal(x, y)
+
+          t = r[0].sub("#{s} ", "")
+          assert_equal(b, w.decode_header(t))
+        end
+
+        sig {params(w: JwtDecoding, b: T::Hash[String, T.untyped], body: T.untyped).void}
+        def check_body_with_jwt(w, b, body)
+          h = T.let(JSON.parse(body), T::Hash[String, T.untyped])
+          assert_equal(b, w.decode_body(h))
+        end
 
         def test_initialize_initializes_with_a_http_and_a_base_uri
           u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
@@ -115,31 +434,445 @@ module Onlyoffice
         end
 
         def test_with_jwt_preserves_the_request_stack
-          m = "GET"
-          n = Net::HTTP::Get
+          for m, n in http_methods
+            t = self
 
-          w = Jwt.new(secret: "***")
-          j = Client::Jwt.new(jwt: w)
-          u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
-          h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-          f = T.let(false, T::Boolean)
-          r = h.method(:request)
-          h = h.clone
+            f = T.let(0, Integer)
 
-          h.define_singleton_method(:request) do |req, body = nil, &block|
-            f = true
-            r.call(req, body, &block)
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              f += 1
+              block.call
+              t.create_ok("{}")
+            end
+
+            r = h.method(:request)
+            h = h.clone
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              f += 1
+              r.call(req, body, &block)
+            end
+
+            j = Client::Jwt.new(jwt: w)
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            res = c.http.request(n.new(u)) do
+              f += 1
+            end
+
+            assert_kind_of(Net::HTTPOK, res)
+
+            assert_equal(3, f)
+            assert_equal("{}", res.body)
           end
+        end
 
-          c = Client.new(base_uri: u, http: h).with_jwt(j)
+        def test_with_jwt_passes_through_itself_when_both_the_request_body_and_the_argument_body_are_present
+          for m, n in http_methods
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-          WebMock.stub_request(m.downcase.to_sym, u)
+            h.define_singleton_method(:start) do
+              # Mock the start method to prevent the connection from being
+              # established.
+            end
 
-          res = c.http.request(n.new(u))
-          assert_kind_of(Net::HTTPOK, res)
+            j = Client::Jwt.new(jwt: w)
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
 
-          assert_true(f)
+            r = n.new(u)
+            r.body = "{}"
+
+            assert_raise_with_message(ArgumentError, "both of body argument and HTTPRequest#body set") do
+              c.http.request(r, "{}")
+            end
+          end
+        end
+
+        def test_with_jwt_passes_through_itself_when_both_the_request_body_stream_and_the_argument_body_are_present
+          for m, n in http_methods
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:start) do
+              # Mock the start method to prevent the connection from being
+              # established.
+            end
+
+            j = Client::Jwt.new(jwt: w)
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            r = n.new(u)
+            r.body_stream = StringIO.new("{}")
+
+            assert_raise_with_message(ArgumentError, "both of body argument and HTTPRequest#body set") do
+              c.http.request(r, "{}")
+            end
+          end
+        end
+
+        def test_with_jwt_injects_the_jwt_into_the_header_when_the_request_body_is_present
+          for m, n in http_methods
+            t = self
+
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_ruby_request_headers_with_jwt(m, u, w, t.hi_h, req)
+              t.assert_equal(t.hi_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
+            j = Client::Jwt.new(jwt: w, locations: [Client::Jwt::Location::Header])
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            req = n.new(u)
+            req.body = t.hi_s
+
+            res = c.http.request(req)
+            assert_equal(t.bye_s, res.body)
+          end
+        end
+
+        def test_with_jwt_injects_the_jwt_into_the_body_when_the_request_body_is_present
+          for m, n in http_methods
+            t = self
+
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_ruby_request_headers(m, u, req)
+              t.check_request_body_with_jwt(w, t.hi_h, req)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
+            j = Client::Jwt.new(jwt: w, locations: [Client::Jwt::Location::Body])
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            req = n.new(u)
+            req.body = t.hi_s
+
+            res = c.http.request(req)
+            assert_equal(t.bye_s, res.body)
+          end
+        end
+
+        def test_with_jwt_injects_the_jwt_into_multiple_locations_when_the_request_body_is_present
+          for m, n in http_methods
+            t = self
+
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_ruby_request_headers_with_jwt(m, u, w, t.hi_h, req)
+              t.check_request_body_with_jwt(w, t.hi_h, req)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
+            j = Client::Jwt.new(
+              jwt: w,
+              locations: [
+                Client::Jwt::Location::Header,
+                Client::Jwt::Location::Body,
+              ],
+            )
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            req = n.new(u)
+            req.body = t.hi_s
+
+            res = c.http.request(req)
+            assert_equal(t.bye_s, res.body)
+          end
+        end
+
+        def test_with_jwt_does_not_inject_the_jwt_without_a_location_when_the_request_body_is_present
+          for m, n in http_methods
+            t = self
+
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_ruby_request_headers(m, u, req)
+              t.assert_equal(t.hi_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
+            j = Client::Jwt.new(jwt: w, locations: [])
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            req = n.new(u)
+            req.body = t.hi_s
+
+            res = c.http.request(req)
+            assert_equal(t.bye_s, res.body)
+          end
+        end
+
+        def test_with_jwt_injects_the_jwt_with_custom_header_when_the_request_body_is_present
+          for m, n in http_methods
+            t = self
+
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_ruby_request_headers_with_custom_jwt_header(m, u, w, "X-Auth", t.hi_h, req)
+              t.check_request_body_with_jwt(w, t.hi_h, req)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
+            j = Client::Jwt.new(jwt: w, header: "X-Auth")
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            req = n.new(u)
+            req.body = t.hi_s
+
+            res = c.http.request(req)
+            assert_equal(t.bye_s, res.body)
+          end
+        end
+
+        def test_with_jwt_injects_the_jwt_with_custom_schema_when_the_request_body_is_present
+          for m, n in http_methods
+            t = self
+
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_ruby_request_headers_with_custom_jwt_schema(m, u, w, "Token", t.hi_h, req)
+              t.check_request_body_with_jwt(w, t.hi_h, req)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
+            j = Client::Jwt.new(jwt: w, schema: "Token")
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            req = n.new(u)
+            req.body = t.hi_s
+
+            res = c.http.request(req)
+            assert_equal(t.bye_s, res.body)
+          end
+        end
+
+        def test_with_jwt_does_not_inject_the_jwt_when_the_request_body_stream_is_present
+          for m, n in http_methods
+            t = self
+
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_ruby_request_headers(m, u, req)
+              t.assert_nil(req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
+            j = Client::Jwt.new(jwt: w)
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            req = n.new(u)
+            req.body_stream = StringIO.new(t.hi_s)
+
+            res = c.http.request(req)
+            assert_equal(t.bye_s, res.body)
+          end
+        end
+
+        def test_with_jwt_injects_the_jwt_into_the_header_when_the_argument_body_is_present
+          for m, n in http_methods
+            t = self
+
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_ruby_request_headers_with_jwt(m, u, w, t.hi_h, req)
+              t.assert_nil(req.body)
+              t.assert_equal(t.hi_s, body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
+            j = Client::Jwt.new(jwt: w, locations: [Client::Jwt::Location::Header])
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            res = c.http.request(n.new(u), t.hi_s)
+            assert_equal(t.bye_s, res.body)
+          end
+        end
+
+        def test_with_jwt_injects_the_jwt_into_the_body_when_the_argument_body_is_present
+          for m, n in http_methods
+            t = self
+
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_ruby_request_headers(m, u, req)
+              t.assert_nil(req.body)
+              t.check_body_with_jwt(w, t.hi_h, body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
+            j = Client::Jwt.new(jwt: w, locations: [Client::Jwt::Location::Body])
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            res = c.http.request(n.new(u), t.hi_s)
+            assert_equal(t.bye_s, res.body)
+          end
+        end
+
+        def test_with_jwt_injects_the_jwt_into_multiple_locations_when_the_argument_body_is_present
+          for m, n in http_methods
+            t = self
+
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_ruby_request_headers_with_jwt(m, u, w, t.hi_h, req)
+              t.assert_nil(req.body)
+              t.check_body_with_jwt(w, t.hi_h, body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
+            j = Client::Jwt.new(
+              jwt: w,
+              locations: [
+                Client::Jwt::Location::Header,
+                Client::Jwt::Location::Body,
+              ],
+            )
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            res = c.http.request(n.new(u), t.hi_s)
+            assert_equal(t.bye_s, res.body)
+          end
+        end
+
+        def test_with_jwt_does_not_inject_the_jwt_without_a_location_when_the_argument_body_is_present
+          for m, n in http_methods
+            t = self
+
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_ruby_request_headers(m, u, req)
+              t.assert_nil(req.body)
+              t.assert_equal(t.hi_s, body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
+            j = Client::Jwt.new(jwt: w, locations: [])
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            res = c.http.request(n.new(u), t.hi_s)
+            assert_equal(t.bye_s, res.body)
+          end
+        end
+
+        def test_with_jwt_injects_the_jwt_with_custom_header_when_the_argument_body_is_present
+          for m, n in http_methods
+            t = self
+
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_ruby_request_headers_with_custom_jwt_header(m, u, w, "X-Auth", t.hi_h, req)
+              t.assert_nil(req.body)
+              t.check_body_with_jwt(w, t.hi_h, body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
+            j = Client::Jwt.new(jwt: w, header: "X-Auth")
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            res = c.http.request(n.new(u), t.hi_s)
+            assert_equal(t.bye_s, res.body)
+          end
+        end
+
+        def test_with_jwt_injects_the_jwt_with_custom_schema_when_the_argument_body_is_present
+          for m, n in http_methods
+            t = self
+
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_ruby_request_headers_with_custom_jwt_schema(m, u, w, "Token", t.hi_h, req)
+              t.assert_nil(req.body)
+              t.check_body_with_jwt(w, t.hi_h, body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
+            j = Client::Jwt.new(jwt: w, schema: "Token")
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
+
+            res = c.http.request(n.new(u), t.hi_s)
+            assert_equal(t.bye_s, res.body)
+          end
         end
 
         def test_uri_creates_a_uri
@@ -184,138 +917,145 @@ module Onlyoffice
         end
 
         def test_request_creates_a_request
-          for m, n in methods
+          for m, n in http_methods
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h)
-            f = headers(c, m)
 
             r = c.request(n, u)
-            assert_equal(m, r.method)
-            assert_equal(u, r.uri)
-            assert_equal(f, r.to_hash)
+            check_request_basics(m, u, r)
+            check_request_headers(m, u, r)
             assert_nil(r.body)
           end
         end
 
         def test_request_creates_a_request_with_a_user_agent
-          for m, n in methods
+          for m, n in http_methods
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h, user_agent: "my-agent")
-            f = headers(c, m)
 
             r = c.request(n, u)
-            assert_equal(m, r.method)
-            assert_equal(u, r.uri)
-            assert_equal(f, r.to_hash)
+            check_request_basics(m, u, r)
+            check_request_headers_with_custom_user_agent(m, u, "my-agent", r)
             assert_nil(r.body)
           end
         end
 
         def test_request_creates_a_request_with_a_body
-          for m, n in methods
+          for m, n in http_methods
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h)
-            f = headers_with_content_type(c, m)
 
-            r = c.request(n, u, {"value" => "hi"})
-            assert_equal(m, r.method)
-            assert_equal(u, r.uri)
-            assert_equal(f, r.to_hash)
-            assert_equal('{"value":"hi"}', r.body)
+            r = c.request(n, u, hi_h)
+            check_request_basics(m, u, r)
+            check_request_headers_with_content_type(m, u, r)
+            assert_equal(hi_s, r.body)
           end
         end
 
-        def test_do_does_a_request
-          for m, n in methods
+        def test_do_does_the_request
+          for m, n in http_methods
+            t = self
+
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
-            c = Client.new(base_uri: u, http: h)
-            f = headers(c, m)
 
-            WebMock.stub_request(m.downcase.to_sym, u).
-              with(headers: f).
-              to_return(body: '{"value":"hi"}')
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_request_headers(m, u, req)
+              t.assert_nil(req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
+            c = Client.new(base_uri: u, http: h)
 
             req = c.request(n, u)
             b, res = c.do(req)
             assert_nil(res.error)
 
             assert_equal(req, res.request)
-            assert_equal(m, res.request.method)
-            assert_equal(u, res.request.uri)
-            assert_equal(f, res.request.to_hash)
-            assert_true(res.request.body == nil || res.request.body == "")
-
-            assert_equal('{"value":"hi"}', res.response.body)
-            assert_equal({"value" => "hi"}, b)
+            assert_equal(bye_s, res.response.body)
+            assert_equal(bye_h, b)
           end
         end
 
-        def test_do_does_a_request_with_a_user_agent
-          for m, n in methods
+        def test_do_does_the_request_with_the_user_agent
+          for m, n in http_methods
+            t = self
+
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_request_headers_with_custom_user_agent(m, u, "my-agent", req)
+              t.assert_nil(req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
             c = Client.new(base_uri: u, http: h, user_agent: "my-agent")
-            f = headers(c, m)
-
-            WebMock.stub_request(m.downcase.to_sym, u).
-              with(headers: f).
-              to_return(body: '{"value":"hi"}')
 
             req = c.request(n, u)
             b, res = c.do(req)
             assert_nil(res.error)
 
             assert_equal(req, res.request)
-            assert_equal(m, res.request.method)
-            assert_equal(u, res.request.uri)
-            assert_equal(f, res.request.to_hash)
-            assert_true(res.request.body == nil || res.request.body == "")
-
-            assert_equal('{"value":"hi"}', res.response.body)
-            assert_equal({"value" => "hi"}, b)
+            assert_equal(bye_s, res.response.body)
+            assert_equal(bye_h, b)
           end
         end
 
-        def test_do_does_a_request_with_a_body
-          for m, n in methods
+        def test_do_does_the_request_with_the_body
+          for m, n in http_methods
+            t = self
+
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_request_headers_with_content_type(m, u, req)
+              t.assert_equal(t.hi_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
             c = Client.new(base_uri: u, http: h)
-            f = headers_with_content_type(c, m)
 
-            WebMock.stub_request(m.downcase.to_sym, u).
-              with(headers: f).
-              to_return(body: '{"value":"hello"}')
-
-            req = c.request(n, u, {"value" => "hi"})
+            req = c.request(n, u, hi_h)
             b, res = c.do(req)
             assert_nil(res.error)
 
             assert_equal(req, res.request)
-            assert_equal(m, res.request.method)
-            assert_equal(u, res.request.uri)
-            assert_equal(f, res.request.to_hash)
-            assert_equal('{"value":"hi"}', res.request.body)
-
-            assert_equal('{"value":"hello"}', res.response.body)
-            assert_equal({"value" => "hello"}, b)
+            assert_equal(bye_s, res.response.body)
+            assert_equal(bye_h, b)
           end
         end
 
         def test_do_returns_an_error_if_the_response_body_is_invalid_json
-          for m, n in methods
+          for m, n in http_methods
+            t = self
+
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
-            c = Client.new(base_uri: u, http: h)
-            f = headers(c, m)
 
-            WebMock.stub_request(m.downcase.to_sym, u).
-              with(headers: f).
-              to_return(body: '}')
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_request_headers(m, u, req)
+              t.assert_nil(req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok("}")
+            end
+
+            c = Client.new(base_uri: u, http: h)
 
             req = c.request(n, u)
             b, res = c.do(req)
@@ -324,94 +1064,88 @@ module Onlyoffice
             assert_equal("unexpected token at '}'", err.message)
 
             assert_equal(req, res.request)
-            assert_equal(m, res.request.method)
-            assert_equal(u, res.request.uri)
-            assert_equal(f, res.request.to_hash)
-            assert_true(res.request.body == nil || res.request.body == "")
-
-            assert_equal(req, res.request)
             assert_equal("}", res.response.body)
             assert_nil(b)
           end
         end
 
-        def test_do_does_a_request_with_a_jwt_in_the_header_location
-          for m, n in methods
+        def test_do_does_the_request_with_the_jwt_in_the_header_location
+          for m, n in http_methods
+            t = self
+
             w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_request_headers_with_jwt(m, u, w, t.hi_h, req)
+              t.assert_equal(t.hi_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
             j = Client::Jwt.new(jwt: w, locations: [Client::Jwt::Location::Header])
-            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
-            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h).with_jwt(j)
-            f0 = headers_with_content_type(c, m)
 
-            WebMock.stub_request(m.downcase.to_sym, u).
-              with(headers: f0).
-              to_return(body: '{"value":"hello"}')
-
-            p0 = {"value" => "hi"}
-            req = c.request(n, u, p0)
+            req = c.request(n, u, hi_h)
             b, res = c.do(req)
             assert_nil(res.error)
 
             assert_equal(req, res.request)
-            assert_equal(m, res.request.method)
-            assert_equal(u, res.request.uri)
-            assert_equal('{"value":"hi"}', res.request.body)
-
-            f1 = T.let(res.request.to_hash, T::Hash[String, T::Array[String]])
-
-            aa = T.cast(f1[j.header.downcase], T::Array[String])
-            as = T.cast(aa[0], String)
-            assert_equal(1, aa.length)
-            assert_true(as.start_with?("#{j.schema} "))
-
-            f1.delete(j.header.downcase)
-            assert_equal(f0, f1)
-
-            t = as.sub("#{j.schema} ", "")
-            p1 = w.decode_header(t)
-            assert_equal(p0, p1)
-
-            assert_equal('{"value":"hello"}', res.response.body)
-            assert_equal({"value" => "hello"}, b)
+            assert_equal(bye_s, res.response.body)
+            assert_equal(bye_h, b)
           end
         end
 
-        def test_do_does_a_request_with_a_jwt_in_the_body_location
-          for m, n in methods
+        def test_do_does_the_request_with_the_jwt_in_the_body_location
+          for m, n in http_methods
+            t = self
+
             w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_request_headers_with_content_type(m, u, req)
+              t.check_request_body_with_jwt(w, t.hi_h, req)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
             j = Client::Jwt.new(jwt: w, locations: [Client::Jwt::Location::Body])
-            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
-            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h).with_jwt(j)
-            f = headers_with_content_type(c, m)
 
-            WebMock.stub_request(m.downcase.to_sym, u).
-              with(headers: f).
-              to_return(body: '{"value":"hello"}')
-
-            p0 = {"value" => "hi"}
-            req = c.request(n, u, p0)
+            req = c.request(n, u, hi_h)
             b, res = c.do(req)
             assert_nil(res.error)
 
             assert_equal(req, res.request)
-            assert_equal(m, res.request.method)
-            assert_equal(u, res.request.uri)
-            assert_equal(f, res.request.to_hash)
-
-            o = T.let(JSON.parse(res.request.body), T::Hash[String, T.untyped])
-            p1 = w.decode_body(o)
-            assert_equal(p0, p1)
-
-            assert_equal('{"value":"hello"}', res.response.body)
-            assert_equal({"value" => "hello"}, b)
+            assert_equal(bye_s, res.response.body)
+            assert_equal(bye_h, b)
           end
         end
 
-        def test_do_does_a_request_with_a_jwt_in_multiple_locations
-          for m, n in methods
+        def test_do_does_the_request_with_the_jwt_in_multiple_locations
+          for m, n in http_methods
+            t = self
+
             w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_request_headers_with_jwt(m, u, w, t.hi_h, req)
+              t.check_request_body_with_jwt(w, t.hi_h, req)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
             j = Client::Jwt.new(
               jwt: w,
               locations: [
@@ -419,244 +1153,105 @@ module Onlyoffice
                 Client::Jwt::Location::Body,
               ],
             )
-            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
-            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
             c = Client.new(base_uri: u, http: h).with_jwt(j)
-            f0 = headers_with_content_type(c, m)
 
-            WebMock.stub_request(m.downcase.to_sym, u).
-              with(headers: f0).
-              to_return(body: '{"value":"hello"}')
-
-            p0 = {"value" => "hi"}
-            req = c.request(n, u, p0)
+            req = c.request(n, u, hi_h)
             b, res = c.do(req)
             assert_nil(res.error)
 
             assert_equal(req, res.request)
-            assert_equal(m, res.request.method)
-            assert_equal(u, res.request.uri)
-
-            f1 = T.let(res.request.to_hash, T::Hash[String, T::Array[String]])
-
-            aa = T.cast(f1[j.header.downcase], T::Array[String])
-            as = T.cast(aa[0], String)
-            assert_equal(1, aa.length)
-            assert_true(as.start_with?("#{j.schema} "))
-
-            f1.delete(j.header.downcase)
-            assert_equal(f0, f1)
-
-            t = as.sub("#{j.schema} ", "")
-            p1 = w.decode_header(t)
-            assert_equal(p0, p1)
-
-            o = T.let(JSON.parse(res.request.body), T::Hash[String, T.untyped])
-            p1 = w.decode_body(o)
-            assert_equal(p0, p1)
-
-            assert_equal('{"value":"hello"}', res.response.body)
-            assert_equal({"value" => "hello"}, b)
+            assert_equal(bye_s, res.response.body)
+            assert_equal(bye_h, b)
           end
         end
 
-        def test_do_does_a_request_with_a_jwt_in_the_header_location_and_a_custom_header
-          for m, n in methods
+        def test_do_does_the_request_without_the_jwt_when_no_location_is_specified
+          for m, n in http_methods
+            t = self
+
             w = Jwt.new(secret: "***")
-            j = Client::Jwt.new(
-              jwt: w,
-              locations: [Client::Jwt::Location::Header],
-              header: "X-Auth",
-            )
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_request_headers_with_content_type(m, u, req)
+              t.assert_equal(t.hi_s, req.body)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
+            j = Client::Jwt.new(jwt: w, locations: [])
             c = Client.new(base_uri: u, http: h).with_jwt(j)
-            f0 = headers_with_content_type(c, m)
 
-            WebMock.stub_request(m.downcase.to_sym, u).
-              with(headers: f0).
-              to_return(body: '{"value":"hello"}')
-
-            p0 = {"value" => "hi"}
-            req = c.request(n, u, p0)
+            req = c.request(n, u, hi_h)
             b, res = c.do(req)
             assert_nil(res.error)
 
             assert_equal(req, res.request)
-            assert_equal(m, res.request.method)
-            assert_equal(u, res.request.uri)
-            assert_equal('{"value":"hi"}', res.request.body)
-
-            f1 = T.let(res.request.to_hash, T::Hash[String, T::Array[String]])
-
-            aa = T.cast(f1[j.header.downcase], T::Array[String])
-            as = T.cast(aa[0], String)
-            assert_equal(1, aa.length)
-            assert_true(as.start_with?("#{j.schema} "))
-
-            f1.delete(j.header.downcase)
-            assert_equal(f0, f1)
-
-            t = as.sub("#{j.schema} ", "")
-            p1 = w.decode_header(t)
-            assert_equal(p0, p1)
-
-            assert_equal('{"value":"hello"}', res.response.body)
-            assert_equal({"value" => "hello"}, b)
+            assert_equal(bye_s, res.response.body)
+            assert_equal(bye_h, b)
           end
         end
 
-        def test_do_does_a_request_with_a_jwt_in_the_header_location_and_a_custom_schema
-          for m, n in methods
+        def test_do_does_the_request_with_custom_jwt_header
+          for m, n in http_methods
+            t = self
             w = Jwt.new(secret: "***")
-            j = Client::Jwt.new(
-              jwt: w,
-              locations: [Client::Jwt::Location::Header],
-              schema: "Token",
-            )
             u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
             h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
+
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_request_headers_with_custom_jwt_header(m, u, w, "X-Auth", t.hi_h, req)
+              t.check_request_body_with_jwt(w, t.hi_h, req)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
+
+            j = Client::Jwt.new(jwt: w, header: "X-Auth")
             c = Client.new(base_uri: u, http: h).with_jwt(j)
-            f0 = headers_with_content_type(c, m)
 
-            WebMock.stub_request(m.downcase.to_sym, u).
-              with(headers: f0).
-              to_return(body: '{"value":"hello"}')
-
-            p0 = {"value" => "hi"}
-            req = c.request(n, u, p0)
+            req = c.request(n, u, t.hi_h)
             b, res = c.do(req)
             assert_nil(res.error)
 
             assert_equal(req, res.request)
-            assert_equal(m, res.request.method)
-            assert_equal(u, res.request.uri)
-            assert_equal('{"value":"hi"}', res.request.body)
-
-            f1 = T.let(res.request.to_hash, T::Hash[String, T::Array[String]])
-
-            aa = T.cast(f1[j.header.downcase], T::Array[String])
-            as = T.cast(aa[0], String)
-            assert_equal(1, aa.length)
-            assert_true(as.start_with?("#{j.schema} "))
-
-            f1.delete(j.header.downcase)
-            assert_equal(f0, f1)
-
-            t = as.sub("#{j.schema} ", "")
-            p1 = w.decode_header(t)
-            assert_equal(p0, p1)
-
-            assert_equal('{"value":"hello"}', res.response.body)
-            assert_equal({"value" => "hello"}, b)
+            assert_equal(bye_s, res.response.body)
+            assert_equal(bye_h, b)
           end
         end
 
-        sig {returns(Client)}
-        def self.client
-          u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
-          h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
-          Client.new(base_uri: u, http: h)
-        end
+        def test_do_does_the_request_with_custom_jwt_schema
+          for m, n in http_methods
+            t = self
 
-        sig {returns(Client)}
-        def client
-          self.class.client
-        end
+            w = Jwt.new(secret: "***")
+            u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
+            h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
 
-        sig {returns(Client)}
-        def self.client_with_a_subpath
-          u = T.cast(URI.parse("http://localhost:8080/sub/"), URI::HTTP)
-          h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
-          Client.new(base_uri: u, http: h)
-        end
+            h.define_singleton_method(:request) do |req, body = nil, &block|
+              t.check_request_basics(m, u, req)
+              t.check_request_headers_with_custom_jwt_schema(m, u, w, "Token", t.hi_h, req)
+              t.check_request_body_with_jwt(w, t.hi_h, req)
+              t.assert_nil(body)
+              t.assert_nil(block)
+              t.create_ok(t.bye_s)
+            end
 
-        sig {returns(Client)}
-        def client_with_a_subpath
-          self.class.client_with_a_subpath
-        end
+            j = Client::Jwt.new(jwt: w, schema: "Token")
+            c = Client.new(base_uri: u, http: h).with_jwt(j)
 
-        sig {returns(Client)}
-        def self.client_with_a_user_agent
-          u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
-          h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
-          Client.new(base_uri: u, http: h, user_agent: "my-agent")
-        end
+            req = c.request(n, u, t.hi_h)
+            b, res = c.do(req)
+            assert_nil(res.error)
 
-        sig {returns(Client)}
-        def client_with_a_user_agent
-          self.class.client_with_a_user_agent
-        end
-
-        sig {returns(Client)}
-        def self.client_with_a_jwt
-          w = Jwt.new(secret: "***")
-          j = Client::Jwt.new(jwt: w)
-          u = T.cast(URI.parse("http://localhost:8080/"), URI::HTTP)
-          h = T.let(Net::HTTP.new(u.hostname, u.port), Net::HTTP)
-          Client.new(base_uri: u, http: h).with_jwt(j)
-        end
-
-        sig {returns(Client)}
-        def client_with_a_jwt
-          self.class.client_with_a_jwt
-        end
-
-        sig {params(c: Client, m: String).returns(T::Hash[String, T::Array[String]])}
-        def self.headers(c, m)
-          o = {
-            "accept" => ["application/json"],
-            "accept-encoding" => ["gzip;q=1.0,deflate;q=0.6,identity;q=0.3"],
-            "host" => ["#{c.base_uri.host}:#{c.base_uri.port}"],
-            "user-agent" => [c.user_agent],
-          }
-
-          if RUBY_VERSION < "3.0.0" && m == "HEAD"
-            o.delete("accept-encoding")
+            assert_equal(req, res.request)
+            assert_equal(bye_s, res.response.body)
+            assert_equal(bye_h, b)
           end
-
-          o
-        end
-
-        sig {params(c: Client, m: String).returns(T::Hash[String, T::Array[String]])}
-        def headers(c, m)
-          self.class.headers(c, m)
-        end
-
-        sig {params(c: Client, m: String).returns(T::Hash[String, T::Array[String]])}
-        def self.headers_with_content_type(c, m)
-          o = {
-            "accept" => ["application/json"],
-            "accept-encoding" => ["gzip;q=1.0,deflate;q=0.6,identity;q=0.3"],
-            "content-type" => ["application/json"],
-            "host" => ["#{c.base_uri.host}:#{c.base_uri.port}"],
-            "user-agent" => [c.user_agent],
-          }
-
-          if RUBY_VERSION < "3.0.0" && m == "HEAD"
-            o.delete("accept-encoding")
-          end
-
-          o
-        end
-
-        sig {params(c: Client, m: String).returns(T::Hash[String, T::Array[String]])}
-        def headers_with_content_type(c, m)
-          self.class.headers_with_content_type(c, m)
-        end
-
-        sig {returns(T::Array[[String, T.class_of(Net::HTTPRequest)]])}
-        def methods
-          [
-            ["DELETE", Net::HTTP::Delete],
-            ["GET", Net::HTTP::Get],
-            ["HEAD", Net::HTTP::Head],
-            ["OPTIONS", Net::HTTP::Options],
-            ["PATCH", Net::HTTP::Patch],
-            ["POST", Net::HTTP::Post],
-            ["PUT", Net::HTTP::Put],
-            ["TRACE", Net::HTTP::Trace],
-          ]
         end
       end
     end
