@@ -17,8 +17,6 @@
 # typed: strict
 # frozen_string_literal: true
 
-require "rake"
-
 Rake::Task.define_task(:test) do
   require "simplecov"
 

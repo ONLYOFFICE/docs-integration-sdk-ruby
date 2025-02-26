@@ -6,7 +6,7 @@ GEM_NAME := onlyoffice-docs_integration_sdk
 help: # Show available recipes
 	@echo "Recipes:"
 	@grep --extended-regexp "^[a-z-]+: #" "$(MAKEFILE_LIST)" | \
-		awk 'BEGIN {FS = ": # "}; {printf "  %-7s    %s\n", $$1, $$2}'
+		awk 'BEGIN {FS = ": # "}; {printf "  %-9s    %s\n", $$1, $$2}'
 
 .PHONY: bundler
 bundler: # Install Bundler

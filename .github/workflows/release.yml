@@ -5,8 +5,8 @@ permissions:
 
 on:
   push:
-    tags:
-    - v*
+    branches:
+    - master
 
 jobs:
   release:
@@ -18,21 +18,11 @@ jobs:
     - name: Setup mise
       uses: jdx/mise-action@v2
 
-    - name: Install Dependencies
-      env:
-        TAPIOCA_WORKERS: 1
-      run: make prod
-
     - name: Build Gem
       run: make gem
 
-    - name: Check Version
-      run: |
-        v=$(gem spec *.gem | yq ".version.version" | tr -d "\n")
-        if [[ "v$v" != "${{github.ref_name}}" ]]; then
-          echo "Version mismatch: "v$v" != ${{github.ref_name}}"
-          exit 1
-        fi
+    - name: Store Gem Version
+      run: echo "GEM_VERSION=$(gem spec *.gem | yq ".version.version")" >> "$GITHUB_ENV"
 
     - name: Publish Gem
       env:
@@ -43,6 +33,6 @@ jobs:
       env:
         GH_TOKEN: ${{github.token}}
       run: |
-        gh release create \
-          --title "${{github.ref_name}}" \
-          --notes "See https://github.com/onlyoffice/docs-integration-sdk-ruby/blob/master/CHANGELOG.md/"
+        gh release create "v${{env.GEM_VERSION}}" \
+          --title "v${{env.GEM_VERSION}}" \
+          --notes "See ${{github.server_url}}/${{github.repository}}/blob/master/CHANGELOG.md/"
