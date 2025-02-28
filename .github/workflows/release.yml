@@ -17,6 +17,18 @@ jobs:
 
     - name: Setup mise
       uses: jdx/mise-action@v2
+      with:
+        # https://github.com/jdx/mise-action/issues/169/
+        cache_key_prefix: mise-edge
+
+    - name: Install Bundler
+      run: make bundler
+
+    - name: Display Versions
+      run: |
+        echo "ruby: $(ruby --version)"
+        echo "gem: $(gem --version)"
+        echo "bundle: $(bundle --version)"
 
     - name: Install Dependencies
       run: make prod
