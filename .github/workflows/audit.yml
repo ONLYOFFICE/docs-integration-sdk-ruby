@@ -54,6 +54,12 @@ jobs:
     - name: Install Bundler
       run: make bundler
 
+    - name: Display Versions
+      run: |
+        echo "ruby: $(ruby --version)"
+        echo "gem: $(gem --version)"
+        echo "bundle: $(bundle --version)"
+
     - name: Install Dependencies
       env:
         TAPIOCA_WORKERS: 1
