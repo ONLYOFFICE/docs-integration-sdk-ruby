@@ -18,6 +18,9 @@ jobs:
     - name: Setup mise
       uses: jdx/mise-action@v2
 
+    - name: Install Dependencies
+      run: make prod
+
     - name: Build Gem
       run: make gem
 
