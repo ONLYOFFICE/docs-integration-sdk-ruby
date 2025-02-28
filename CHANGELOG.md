@@ -4,7 +4,9 @@ This document records all notable changes to the project, following the [Keep a 
 
 ## [Unreleased]
 
-<!-- There are no noticeable changes in version [unreleased]. -->
+There are no noticeable changes in version [unreleased].
+
+## [0.1.0] - 2025-02-28
 
 ### Added
 
@@ -19,7 +21,8 @@ This document records all notable changes to the project, following the [Keep a 
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Releases, newest on top -->
-[Unreleased]: https://github.com/onlyoffice/docs-integration-sdk-ruby/compare/HEAD/
+[Unreleased]: https://github.com/onlyoffice/docs-integration-sdk-ruby/compare/v0.1.0...HEAD/
+[0.1.0]: https://github.com/onlyoffice/docs-integration-sdk-ruby/releases/tag/v0.1.0/
 
 <!-- Commits, newest on top -->
 [5a35c40]: https://github.com/onlyoffice/docs-integration-sdk-ruby/commit/5a35c4015eeb284f6cf8b0ddbc96a67a31a23ed7/
