@@ -1,0 +1,38 @@
+name: Release
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup mise
+      uses: jdx/mise-action@v2
+
+    - name: Build Gem
+      run: make gem
+
+    - name: Store Gem Version
+      run: echo "GEM_VERSION=$(gem spec *.gem | yq ".version.version")" >> "$GITHUB_ENV"
+
+    - name: Publish Gem
+      env:
+        GEM_HOST_API_KEY: ${{secrets.RUBYGEMS_API_KEY}}
+      run: gem push *.gem
+
+    - name: Create Release
+      env:
+        GH_TOKEN: ${{github.token}}
+      run: |
+        gh release create "v${{env.GEM_VERSION}}" \
+          --title "v${{env.GEM_VERSION}}" \
+          --notes "See ${{github.server_url}}/${{github.repository}}/blob/master/CHANGELOG.md/"

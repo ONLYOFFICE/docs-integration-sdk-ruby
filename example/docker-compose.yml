@@ -1,0 +1,17 @@
+services:
+  document-server:
+    image: onlyoffice/documentserver:8.2
+    environment:
+    - JWT_SECRET=your-256-bit-secret
+
+  example:
+    build: .
+    ports:
+    - 8080:8080
+    environment:
+    - DOCUMENT_SERVER_BASE_URL=http://document-server/
+    - DOCUMENT_SERVER_JWT_SECRET=your-256-bit-secret
+    - EXAMPLE_HOST=0.0.0.0
+    - EXAMPLE_PORT=8080
+    - EXAMPLE_INTERNAL_HOST=example
+    - EXAMPLE_INTERNAL_PORT=8080

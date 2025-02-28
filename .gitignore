@@ -1,0 +1,6 @@
+.yardoc
+bin
+coverage
+doc
+sorbet
+onlyoffice-docs_integration_sdk.gem

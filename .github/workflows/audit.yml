@@ -1,0 +1,69 @@
+name: Audit
+
+on:
+  pull_request:
+    branches:
+    - master
+    - develop
+  push:
+    branches:
+    - master
+    - develop
+  workflow_dispatch:
+
+jobs:
+  audit:
+    strategy:
+      matrix:
+        os:
+        - ubuntu-latest
+        # - windows-latest
+        mise:
+        - edge
+        - legacy
+
+    runs-on: ${{matrix.os}}
+
+    env:
+      MISE_ENV: ${{matrix.mise}}
+
+    steps:
+    # # https://github.com/actions/checkout/issues/135/
+    # - name: Set LF Line Endings
+    #   run: |
+    #     git config --global core.autocrlf false
+    #     git config --global core.eol lf
+
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Persist Dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          bin
+          sorbet
+        key: os-${{matrix.os}}_mise-${{matrix.mise}}_deps
+
+    - name: Setup mise
+      uses: jdx/mise-action@v2
+      with:
+        # https://github.com/jdx/mise-action/issues/169/
+        cache_key_prefix: mise-${{matrix.mise}}
+
+    - name: Install Bundler
+      run: make bundler
+
+    - name: Install Dependencies
+      env:
+        TAPIOCA_WORKERS: 1
+      run: make dev
+
+    # - name: Run Linting
+    #   run: make lint
+
+    - name: Run Testing
+      run: make test
+
+    - name: Run Type Checking
+      run: make type
