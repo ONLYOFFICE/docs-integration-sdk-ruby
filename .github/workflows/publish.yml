@@ -27,8 +27,10 @@ jobs:
           sorbet
         key: deps
 
-    - name: Setup GitHub Actions Bot
-      uses: vanyauhalin/action-gh-bot@v0
+    - name: Configure Git
+      run: |
+        git config --global user.name "$GITHUB_ACTOR"
+        git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
     - name: Setup mise
       uses: jdx/mise-action@v2
